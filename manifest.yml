@@ -1,0 +1,12 @@
+---
+applications:
+  - name: emobility-smart-charging
+    health-check-type: process
+    health-check-timeout: 300
+    memory: 2G
+    disk_quota: 4G
+    instances: 1
+    env:
+      
+    services:
+      - application-logs

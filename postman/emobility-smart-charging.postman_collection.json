@@ -1,0 +1,61 @@
+{
+	"info": {
+		"_postman_id": "192cde92-4b1b-47c6-9758-e2a4f56ad3e6",
+		"name": "emobility-smart-charging",
+		"description": "Collection of API requests for emobility-smart-charging",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Health",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "localhost:8080/actuator/health",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"actuator",
+						"health"
+					]
+				},
+				"description": "Check if server is running"
+			},
+			"response": []
+		},
+		{
+			"name": "OptimizeChargingProfiles",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n\t\"state\": {\n\t\t\"currentTimeSeconds\": 85800,\n\t\t\"chargingStations\": [{\n\t\t\t\"id\": 4,\n\t\t\t\"fusePhase1\": 32,\n\t\t\t\"fusePhase2\": 32,\n\t\t\t\"fusePhase3\": 32\n\t\t}],\n\t\t\"cars\": [{\n\t\t\t\"id\": 3,\n\t\t\t\"carType\": \"BEV\", \n\t\t\t\"minCurrent\": 18,\n\t\t\t\"minCurrentPerPhase\": 6,\n\t\t\t\"maxCurrent\": 96,\n\t\t\t\"maxCurrentPerPhase\": 32,\n\t\t\t\"canLoadPhase1\": 1,\n\t\t\t\"canLoadPhase2\": 1,\n\t\t\t\"canLoadPhase3\": 1,\n\t\t\t\"maxCapacity\": 100,\n\t\t\t\"minLoadingState\": 50,\n\t\t\t\"startCapacity\": 10,\n\t\t\t\"timestampArrival\": 32400\n\t\t}],\n\t\t\"carAssignments\": [{\n\t\t\t\"carID\": 3,\n\t\t\t\"chargingStationID\": 4\n\t\t}], \n\t\t\"maximumSiteLimitKW\": 100,\n\t\t\"energyPriceHistory\": {\n\t\t\t\"numberOfTimeslots\": 96\n\t\t}\n\t},\n\t\"event\": {\n\t\t\"eventType\": \"Reoptimize\"\n\t}\n}\n\n\n"
+				},
+				"url": {
+					"raw": "localhost:8080/api/v1/OptimizeChargingProfiles",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"v1",
+						"OptimizeChargingProfiles"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

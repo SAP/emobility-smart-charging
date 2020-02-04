@@ -1,0 +1,95 @@
+<div id="divContainer">
+
+    <mat-accordion [multi]="true">
+        <!--<h2 class="mat-h2">Input parameters</h2> -->
+
+        <mat-expansion-panel #matPanelInputParameters [expanded]="true">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    Data
+                </mat-panel-title>
+                <mat-panel-description>
+                    Enter data
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="floatLeft clearBoth">
+                <h3>Time (seconds after midnight: {{data.request.state.currentTimeSeconds}})</h3>
+                <mat-form-field appearance="outline" class="floatLeft inputClockComponent">
+                    <mat-label>Hours</mat-label>
+                    <input #inputHours matInput type="number" min="0" [max]="23" name="inputHours"
+                        [value]="getTimeHours()" (change)="refreshCurrentTimeSeconds()">
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="floatLeft inputClockComponent">
+                    <mat-label>Minutes</mat-label>
+                    <input #inputMinutes matInput type="number" min="0" [max]="59" name="inputMinutes"
+                        [value]="getTimeMinutes()" (change)="refreshCurrentTimeSeconds()">
+                </mat-form-field> 
+                <mat-form-field appearance="outline" class="floatLeft inputClockComponent">
+                    <mat-label>Seconds</mat-label>
+                    <input #inputSeconds matInput type="number" min="0" [max]="23" name="inputSeconds"
+                        [value]="getTimeSeconds()" (change)="refreshCurrentTimeSeconds()">
+                </mat-form-field>
+            </div>
+            <div class="floatLeft clearBoth">
+                <h3>Charging infrastructure</h3>
+                <app-fuse-tree-component [fuseTreeNode]="data.request.state.fuseTree.rootFuse" [depth]="0"
+                    [appParent]="this">
+                </app-fuse-tree-component>
+            </div>
+
+            <div class="floatLeft clearBoth">
+                <button (click)="onClickResetData()" mat-raised-button color="warn">
+                    <mat-icon>delete</mat-icon>Reset data
+                </button>
+            </div>
+
+        </mat-expansion-panel>
+
+        <mat-expansion-panel (opened)="data.settings.requestJSONExpanded = true"
+            (closed)="data.settings.requestJSONExpanded = false" [expanded]="data.settings.requestJSONExpanded">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    REST Request
+                </mat-panel-title>
+                <mat-panel-description>
+                    View JSON request that is sent to server
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <pre>{{getRequestJSON()}}</pre>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel (opened)="data.settings.responseExpanded = true"
+            (closed)="data.settings.responseExpanded = false" [expanded]="data.settings.responseExpanded">
+            <mat-expansion-panel-header>
+                <mat-panel-title>
+                    Results
+                </mat-panel-title>
+                <mat-panel-description>
+                    View JSON response and results
+                </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="floatLeft clearBoth">
+                <button (click)="onClickSendRequest()" mat-raised-button color="primary">Optimize charge plans (send request
+                        to server)</button>
+            </div>
+            
+
+            <div *ngIf="responseJSON !== ''" class="floatLeft clearBoth">
+                <pre>{{responseJSON}}</pre>
+            </div>
+
+            <div *ngIf="exceptionName !== ''" class="floatLeft clearBoth">
+                <h2>An error has occured: {{exceptionName}}</h2>
+                <p>{{exceptionMessage}}</p>
+            </div>
+
+        </mat-expansion-panel>
+
+    </mat-accordion>
+
+</div>
+
+<router-outlet></router-outlet>

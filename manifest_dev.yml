@@ -1,0 +1,15 @@
+---
+applications:
+  - name: emobility-smart-charging
+    health-check-type: process
+    health-check-timeout: 300
+    memory: 2G
+    disk_quota: 4G
+    instances: 1
+    path: target/emobility-smart-charging-0.0.1-SNAPSHOT.jar
+    buildpacks:
+      - https://github.com/cloudfoundry/java-buildpack.git
+    env:
+      
+    services:
+      - application-logs

@@ -1,0 +1,16 @@
+.git/
+
+
+gen/
+postman/
+
+# Should be built using npm
+frontend/node_modules
+
+# This should be built using angular
+public/playground/
+
+
+
+# This should be built using mvn
+target/

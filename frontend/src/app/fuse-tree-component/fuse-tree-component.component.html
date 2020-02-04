@@ -1,0 +1,67 @@
+<div [style.marginLeft.px]="40" class="divFuseTreeComponentContainer clearBoth floatLeft">
+    <div class="floatLeft clearBoth">
+        <div class="floatLeft" style="display: inline-block">
+            <div class="icon-text">
+                <mat-icon *ngIf="fuseTreeNode['@type']=='ChargingStation'">ev_station</mat-icon>
+                <mat-icon *ngIf="fuseTreeNode['@type']=='Fuse'">settings_input_hdmi</mat-icon>
+
+                {{fuseTreeNode['@type']}} (id={{fuseTreeNode.id}}):
+                ({{fuseTreeNode.fusePhase1}}A,
+                {{fuseTreeNode.fusePhase2}}A,
+                {{fuseTreeNode.fusePhase3}}A)
+
+                <button *ngIf="fuseTreeNode['@type']=='ChargingStation' && getAssignedCar() == null" mat-raised-button
+                        (click)="onClickAddCar()" class="buttonChangeInfrastructure">
+                    <mat-icon>add</mat-icon>
+                    Add car
+                </button>
+                <button *ngIf="fuseTreeNode.id>0 || fuseTreeNode['@type']=='ChargingStation'" mat-raised-button
+                        (click)="onClickDeleteFuseTreeNode()" class="buttonChangeInfrastructure">
+                    <mat-icon>delete</mat-icon>
+                    Delete
+                </button>
+            </div>
+            
+        </div>
+
+        <div class="divCarContainer floatLeft clearBoth icon-text blueBorderLeft"
+            *ngIf="fuseTreeNode['@type']=='ChargingStation' && getAssignedCar() !== null">
+            <mat-icon>directions_car</mat-icon>
+            <span>
+                Car (id={{getAssignedCar().id}},
+            </span>
+            <span [class.invalidValue]="isTimestampArrivalValid() === false">
+                from: {{appParent.toHH_MM(getAssignedCar().timestampArrival)}})
+            </span>
+
+            <button mat-raised-button (click)="onClickDeleteCar()" class="buttonChangeInfrastructure">
+                <mat-icon>delete</mat-icon>
+                Delete
+            </button>
+        </div>
+    </div>
+
+
+    <div *ngIf="fuseTreeNode['@type']=='Fuse'" class="blueBorderLeft floatLeft clearBoth">
+        <app-fuse-tree-component *ngFor="let childNode of fuseTreeNode.children" [depth]="depth+1"
+            [fuseTreeNode]="childNode" [appParent]="appParent">
+        </app-fuse-tree-component>
+
+        <div class="floatLeft clearBoth" [style.marginTop.px]="5" [style.marginLeft.px]="0">
+            <button mat-raised-button (click)="onClickAddFuseChild()" class="buttonChangeInfrastructure">
+                <mat-icon>add</mat-icon>
+                Add fuse
+            </button>
+            <button mat-raised-button (click)="onClickAddChargingStationChild()" class="buttonChangeInfrastructure">
+                <mat-icon>add</mat-icon>
+                Add charging station
+            </button>
+        </div>
+    </div>
+    <div class="floatLeft" class="floatLeft clearBoth" *ngIf="false">
+
+    </div>
+
+    <!-- settings_input_component good for phase matching -->
+
+</div>

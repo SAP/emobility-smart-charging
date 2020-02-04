@@ -1,0 +1,24 @@
+
+
+.divFuseTreeComponentContainer {
+    padding: 0px 0px 0px 0px; /* top right bottom left */
+    margin-bottom: 10px; 
+}
+
+.blueBorderLeft {
+    border-left: 1px dotted blue; 
+}
+
+.icon-text {
+    display: flex;
+    align-items: center;
+}
+
+.buttonChangeInfrastructure {
+    margin-left: 5px; 
+}
+
+.divCarContainer {
+    padding-left: 20px; 
+    margin-top: 5px; 
+}
