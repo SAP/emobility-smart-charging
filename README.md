@@ -119,7 +119,7 @@ Please use the [GitHub issue tracker](../../issues) for any questions, bug repor
 
 ### License
 
-Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved.
+Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved.
 This file is licensed under the Apache Software License, v.2 except as noted otherwise in the [LICENSE file](LICENSE).
 
 Please note that Docker images can contain other software which may be licensed under different licenses. This License file is also included in the Docker image. For any usage of built Docker images please make sure to check the licenses of the artifacts contained in the images.
