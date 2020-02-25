@@ -29,7 +29,7 @@ public class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAda
     @Override
     protected void configure(HttpSecurity http) throws Exception {
     	// Example of Basic authentication, if needed:
-        // http
+        http
     	//   .authorizeRequests()
     	//   .antMatchers("/actuator/*")
     	//   .permitAll()
@@ -39,8 +39,8 @@ public class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAda
     	//   .httpBasic() 
     	//   .authenticationEntryPoint(authenticationEntryPoint)
     	//   .and()
-    	//   .csrf().disable();
-          
+    	   .csrf().disable();
+    	
     	//  http.addFilterAfter(new CustomFilter(), BasicAuthenticationFilter.class);
     }
     
