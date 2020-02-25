@@ -9,38 +9,39 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
-    @Autowired private CustomBasicAuthenticationEntryPoint authenticationEntryPoint;
+    // @Autowired private CustomBasicAuthenticationEntryPoint authenticationEntryPoint;
 
     @Autowired
     public void configureGlobal(AuthenticationManagerBuilder auth) throws Exception {
-        auth
-          .inMemoryAuthentication()
-          .withUser("user1")
-          .password(passwordEncoder().encode("BE4kpTZHkCpMMVj38zpj"))
-          .authorities("ROLE_USER");
+    	// Example of Basic authentication, if needed:
+    	// auth
+    	// .inMemoryAuthentication()
+        //  .withUser("user1")
+        //  .password(passwordEncoder().encode("BE4kpTZHkCpMMVj38zpj"))
+    	//  .authorities("ROLE_USER");
     }
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        http
-          .authorizeRequests()
-          .antMatchers("/actuator/*")
-          .permitAll()
-          .anyRequest()
-          .authenticated()
-          .and()
-          .httpBasic()
-          .authenticationEntryPoint(authenticationEntryPoint)
-          .and()
-          .csrf().disable();
+    	// Example of Basic authentication, if needed:
+        // http
+    	//   .authorizeRequests()
+    	//   .antMatchers("/actuator/*")
+    	//   .permitAll()
+    	//   .anyRequest()
+    	//   .authenticated()
+    	//   .and()
+    	//   .httpBasic() 
+    	//   .authenticationEntryPoint(authenticationEntryPoint)
+    	//   .and()
+    	//   .csrf().disable();
           
-        http.addFilterAfter(new CustomFilter(), BasicAuthenticationFilter.class);
+    	//  http.addFilterAfter(new CustomFilter(), BasicAuthenticationFilter.class);
     }
     
     @Bean
