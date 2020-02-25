@@ -1,11 +1,10 @@
 # emobility-smart-charging
-[![Build Status](https://travis-ci.cloud.sap.corp/D059373/emobility-smart-charging.svg?token=RXEqMfJB84WgppxwEaKh&branch=master)](https://travis-ci.cloud.sap.corp/D059373/emobility-smart-charging)
-
 
 ## Contents:
 1. [Description](#description)
 1. [Requirements](#requirements)
 1. [Download and Installation](#download-and-installation)
+1. [Getting Started](#getting-started)
 1. [Known Issues](#known-issues)
 1. [How to obtain support](#how-to-obtain-support)
 1. [To-Do (upcoming changes)](#to-do-upcoming-changes)
@@ -91,7 +90,7 @@ java -jar target/emobility-smart-charging-0.0.1-SNAPSHOT.jar
 ```
 
 #### Accessing the application
-After you have started the application it can be accessed via [localhost:8080](http://localhost:8080/). 
+After you have started the application it runs on `localhost:8080`. 
 The frontend can be accessed via [/playground/index.html](http://localhost:8080/playground/index.html). 
 The API documentation is implemented via Swagger and can be accessed via [/swagger-ui.html](http://localhost:8080/swagger-ui.html). 
 
@@ -103,6 +102,25 @@ mvn typescript-generator:generate
 ```
 This approach is used in the frontend. Type declarations are generated in the file `frontend/src/assets/server_types.d.ts`. 
 
+### Getting Started
+The purpose of this section is to get you started on using the charging optimizer API. 
+
+The easiest way to understand the interface of the API is to tinker with the playground ([/playground/index.html](http://localhost:8080/playground/index.html)). The playground is a visual interface which lets you edit the input for the charging optimizer in a natural way. The playground translates your model into a JSON request which is the technical input to the charging optimizer. You can easily pick up how to assemble JSON requests for the optimizer by observing how your playground input is reflected in the generated request.
+
+#### Understanding charging optimizer input
+In the top part of the playground screen you can edit the following input parameters:
+* **Current time**: This is the actual time of day assumed by the optimizer. The optimizer can only schedule charging sessions after the current time, not before. By default, the playground uses midday as current time. 
+
+* **Charging infrastructure**: The charging infrastructure consists of a hierarchy of fuses reflecting the technical installation of the charging hardware. In real life, fuses are installed in a tree structure. There is typically one fuse per charging station, another fuse for a set of charging stations, and then further fuses for sets of fuses. By default, the playground contains a charging infrastructure with two levels of fuses to illustrate the concept of the tree structure.
+
+* **Fuse**: Each fuse is characterized by the current at which the fuse cuts off the power supply. The charging optimizer assumes three-phase electrical circuits. Therefore, each fuse is defined by a triplet of current values, one per phase. The playground lets you add further fuses to the infrastructure by clicking the corresponding buttons. By default, the playground uses 32 Ampere per phase for new fuses.
+* **Charging station**: Each charging station is characterized by the current at which the built-in fuse cuts off the power supply. The playground lets you add further charging stations by clicking the corresponding buttons. By default, the playground uses charging stations with 32 Ampere fuses.
+
+* **Car**: In the playground, cars can be added to charging stations to express their arrival at the charging station. When you add cars via the corresponding button, semantically you create a charging demand. In the charging optimizer, the cars with their charging demands are the central items for the optimization process. The charging optimizer creates one charge plan per car. Therfore you need to have at least one car in your input for the charge optimizer to create a non-trivial output. The more cars you add to the input, the higher becomes the competition for the scarce resource of charging current. With more cars, the available charging capacity is divided and more cars are assigned only partial or no charging opportunities.
+When you check out the generated JSON request you will notice the long list of parameters per car.
+
+#### Understanding charging optimizer output
+To trigger the charging optimizer us the button labelled **Optimize charge plans**. The resultung JSON response contains a list of charge plans, one per car. Note that the actual charge plan for the car is labelled **currentPlan** and consists of a list of 96 entries. Each entry corresponds to a 15 minute interval since midnight. The entered value specifies the charging current which the optimizer assigns to this car in the given interval.
 
 ### Known Issues
 Please refer to the list of [issues](../../issues) on GitHub.
@@ -115,7 +133,8 @@ Please use the [GitHub issue tracker](../../issues) for any questions, bug repor
 
 ### To-Do (upcoming changes) 
 - Provide translation of charging profiles to the Open Charge Point Protocol (OCPP) 1.6 or 2.0 
-- Provide standard car model parameters
+- Provide parameters for standard EV models 
+- Document API EV parameters in Swagger
 
 ### License
 
