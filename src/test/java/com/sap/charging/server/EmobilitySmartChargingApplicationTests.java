@@ -2,7 +2,10 @@ package com.sap.charging.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,7 +64,7 @@ class EmobilitySmartChargingApplicationTests extends SimulationUnitTest {
 	}
 
 	@Test
-	void testRESTEndpoint_singleCarAssignment() {
+	void testRESTEndpoint_singleCarAssignment() throws URISyntaxException {
 		assertThat(controller).isNotNull();
 		
 		Car car = state.getCar(0); 
@@ -82,21 +85,36 @@ class EmobilitySmartChargingApplicationTests extends SimulationUnitTest {
 		OptimizeChargingProfilesRequest request = new OptimizeChargingProfilesRequest(state, event, 0); 
 		
 		HttpHeaders headers = new HttpHeaders();
-		headers.add("Authorization", "Basic dXNlcjE6QkU0a3BUWkhrQ3BNTVZqMzh6cGo=");
+		//headers.add("Authorization", "Basic dXNlcjE6QkU0a3BUWkhrQ3BNTVZqMzh6cGo=");
 		
+		
+		final String baseUrl = "http://localhost:" + port + "/api/v1/OptimizeChargingProfiles";
+        URI uri = new URI(baseUrl);
+        
 		HttpEntity<OptimizeChargingProfilesRequest> entity = new HttpEntity<>(request, headers);
 		
-		ResponseEntity<Object> response = this.restTemplate.postForEntity("http://localhost:" + port + "/api/v1/OptimizeChargingProfiles", 
-				entity, 
-				Object.class); 
+		System.out.println("Testing POST request on uri=" + uri.toString());
 		
+		ResponseEntity<Object> response = this.restTemplate.postForEntity(uri, entity, Object.class); 
+		 
+
+		try {
+			OptimizeChargingProfilesResponse result = mapper.convertValue(response.getBody(), OptimizeChargingProfilesResponse.class); 
+			
+			double plannedCapacity = scheduler.getPlannedCapacity(chargingStation, result.cars.get(0), currentTimeSeconds);
+			assertThat(plannedCapacity).isGreaterThan(car.getMaxCapacity()- (1e-8)); 
+			assertEquals(car.getMaxCapacity(), plannedCapacity, 1);
+			assertEquals(state.cars.size(), result.cars.size()); 
+			
+		}
+		catch (Exception e) {
+			
+			System.out.println("Response status: " + response.getStatusCodeValue());
+			System.out.println(response.getBody());
+			
+			fail("REST Request failed."); 
+		}
 		
-		OptimizeChargingProfilesResponse result = mapper.convertValue(response.getBody(), OptimizeChargingProfilesResponse.class); 
-		
-		double plannedCapacity = scheduler.getPlannedCapacity(chargingStation, result.cars.get(0), currentTimeSeconds);
-		assertThat(plannedCapacity).isGreaterThan(car.getMaxCapacity()- (1e-8)); 
-		assertEquals(car.getMaxCapacity(), plannedCapacity, 1);
-		assertEquals(state.cars.size(), result.cars.size()); 
 		
 	}
 
