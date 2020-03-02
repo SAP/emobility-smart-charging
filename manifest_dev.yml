@@ -10,6 +10,6 @@ applications:
     buildpacks:
       - https://github.com/cloudfoundry/java-buildpack.git
     env:
-      
+
     services:
       - application-logs
