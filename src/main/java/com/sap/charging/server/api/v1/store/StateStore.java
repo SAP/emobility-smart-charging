@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
@@ -24,6 +25,9 @@ public class StateStore {
 	public final int currentTimeSeconds;
 	public final List<ChargingStationStore> chargingStations;
 
+	@JsonIgnore
+	public final List<ChargingStation> chargingStationsConverted; 
+	
 	public final FuseTree fuseTree;
 	public final Double maximumSiteLimitKW;
 	public final List<Car> cars;
@@ -45,10 +49,14 @@ public class StateStore {
 			throw new MissingParameterException("chargingStations must be passed if fuse tree is not passed");
 		} else if (chargingStations != null) {
 			this.chargingStations = chargingStations;
+			this.chargingStationsConverted = chargingStations.stream()
+					.map(store -> store.toChargingStation()).collect(Collectors.toList());
 		} else {
 			// Fuse tree is passed, get charging stations from it
 			this.chargingStations = fuseTree.getListOfChargingStations().stream()
 					.map(station -> ChargingStationStore.fromChargingStation(station)).collect(Collectors.toList());
+			this.chargingStationsConverted = fuseTree.getListOfChargingStations(); 
+			
 		}
 
 		if (fuseTree == null && (maximumSiteLimitKW == null || chargingStations == null)) {
@@ -70,7 +78,7 @@ public class StateStore {
 	/**
 	 * Check that all carAssignment cars and charging stations can be found (by id)
 	 * 
-	 * @param chargingStationsStore
+	 * @param chargingStations
 	 * @param cars
 	 * @param carAssignments
 	 */
@@ -102,9 +110,7 @@ public class StateStore {
 
 	public State toState() {
 
-		List<ChargingStation> chargingStationsConverted = chargingStations.stream()
-				.map(store -> store.toChargingStation()).collect(Collectors.toList());
-		State state = new State(0, chargingStationsConverted, null, cars, energyPriceHistory);
+		State state = new State(0, this.chargingStationsConverted, null, cars, energyPriceHistory);
 
 		state.currentTimeSeconds = currentTimeSeconds;
 		state.currentTimeslot = TimeUtil.getTimeslotFromSeconds(currentTimeSeconds);
@@ -117,20 +123,22 @@ public class StateStore {
 		}
 
 		if (this.fuseTree != null) {
+			// Fuse tree is optional. If it was passed, use original
 			state.fuseTree = fuseTree;
+			state.fuseTree.refreshFuseTreeNodeParents(); 
 		} else {
 			// Prepare fuse tree by using maximumSiteLimit and chargingStationStore
 			double fuseSizePerPhase = EnergyUtil.calculateIFromP(maximumSiteLimitKW, 3); // in ampere
 
 			Fuse rootFuse = new Fuse(0, fuseSizePerPhase);
-			
-			for (ChargingStation chargingStation : chargingStationsConverted) {
+			for (ChargingStation chargingStation : this.chargingStationsConverted) {
 				rootFuse.addChild(chargingStation);
 			}
 			
 			state.fuseTree = new FuseTree(rootFuse, chargingStations.size());
 		}
-
+		
+		
 		// Prepare car assignments
 		for (CarAssignmentStore carAssignmentStore : carAssignments) {
 			Car car = state.getCar(carAssignmentStore.carID);

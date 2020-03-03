@@ -56,8 +56,6 @@ public class FuseTree implements JSONSerializable {
 		return sb.toString();
 	}
 	
-	
-	
 	public void refreshListOfChargingStations() {
 		listOfChargingStations = new ArrayList<ChargingStation>();
 		traverseTree(new Callback<FuseTreeNode>() {
@@ -66,6 +64,22 @@ public class FuseTree implements JSONSerializable {
 					listOfChargingStations.add((ChargingStation) item);
 			}
 		});
+	}
+	
+	// From JSON does not capture parent attributes of fuses
+	public void refreshFuseTreeNodeParents() {
+		Stack<FuseTreeNode> stack = new Stack<>();
+		stack.push(this.rootFuse);
+		while (stack.isEmpty() == false) {
+			FuseTreeNode currentParentNode = stack.pop();
+			if (currentParentNode.hasChildren()) {
+				for (int i=currentParentNode.getChildren().size()-1;i>=0;i--) {
+					FuseTreeNode child = currentParentNode.getChildren().get(i); 
+					child.setParent(currentParentNode);
+					stack.add(child); // Add last item first because stack is LIFO queue
+				}
+			}
+		}
 	}
 	
 	/**

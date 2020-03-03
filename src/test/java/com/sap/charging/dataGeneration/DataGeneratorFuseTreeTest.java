@@ -11,6 +11,7 @@ import com.sap.charging.model.ChargingStation;
 import com.sap.charging.model.Fuse;
 import com.sap.charging.model.FuseTree;
 import com.sap.charging.model.EnergyUtil.Phase;
+import com.sap.charging.opt.CONSTANTS;
 
 public class DataGeneratorFuseTreeTest {
 	
@@ -36,9 +37,9 @@ public class DataGeneratorFuseTreeTest {
 		
 		Fuse root = (Fuse) result.getRootFuse();
 		assertEquals(0, root.getId());
-		assertEquals(4000, root.getFusePhase(Phase.PHASE_1), 1e-8);
-		assertEquals(4000, root.getFusePhase(Phase.PHASE_2), 1e-8);
-		assertEquals(4000, root.getFusePhase(Phase.PHASE_3), 1e-8);
+		assertEquals(CONSTANTS.FUSE_LEVEL_0_SIZE, root.getFusePhase(Phase.PHASE_1), 1e-8);
+		assertEquals(CONSTANTS.FUSE_LEVEL_0_SIZE, root.getFusePhase(Phase.PHASE_2), 1e-8);
+		assertEquals(CONSTANTS.FUSE_LEVEL_0_SIZE, root.getFusePhase(Phase.PHASE_3), 1e-8);
 		
 		assertEquals("Fuse l0: 3x 4000.0A", root.toString());
 		assertTrue(root.hasChildren());
