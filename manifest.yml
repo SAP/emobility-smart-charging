@@ -7,6 +7,6 @@ applications:
     disk_quota: 4G
     instances: 1
     env:
-      
+
     services:
       - application-logs
