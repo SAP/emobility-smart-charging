@@ -1,0 +1,11 @@
+<div *ngIf="restApiResponse.jsonContent.cars !== undefined && restApiResponse.error.name === ''" class="floatLeft clearBoth">
+    <ngx-json-view [data]="restApiResponse.jsonContent" [levelOpen]="2"></ngx-json-view>
+</div> 
+
+
+
+<div *ngIf="restApiResponse.error.name !== ''" class="floatLeft clearBoth">
+    <h2>An error has occured: {{restApiResponse.error.name}}</h2>
+    <p>{{restApiResponse.error.message}}</p>
+</div>
+

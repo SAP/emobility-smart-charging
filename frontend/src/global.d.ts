@@ -1,5 +1,4 @@
-import { OptimizeChargingProfilesRequest } from "./assets/server_types";
-
+import { OptimizeChargingProfilesRequest, Car, OptimizeChargingProfilesResponse } from "./assets/server_types";
 
 
 declare type websiteDataType = {
@@ -11,4 +10,15 @@ declare type websiteDataType = {
 declare type websiteSettings = {
     requestJSONExpanded: boolean,
     responseExpanded: boolean
+}
+
+
+declare type restApiResponseErrorType = {
+    name: string, 
+    message: string
+}
+
+declare type restApiResponseType = {
+    jsonContent: OptimizeChargingProfilesResponse, 
+    error: restApiResponseErrorType
 }

@@ -11,12 +11,18 @@ import { MatIconModule } from "@angular/material";
 import { MatSnackBarModule } from "@angular/material";
 import { HttpClientModule } from  '@angular/common/http';
 import { MatInputModule } from "@angular/material/input";
-import { FormsModule } from '@angular/forms'
+import { FormsModule } from '@angular/forms';
+import { ResultJsonComponentComponent } from './result-json-component/result-json-component.component'
+
+import { NgxJsonViewModule } from 'ng-json-view';
+import { RequestJsonComponentComponent } from './request-json-component/request-json-component.component';
 
 @NgModule({
     declarations: [
         AppComponent,
-        FuseTreeComponentComponent
+        FuseTreeComponentComponent,
+        ResultJsonComponentComponent,
+        RequestJsonComponentComponent
     ],
     imports: [
         BrowserModule,
@@ -28,7 +34,8 @@ import { FormsModule } from '@angular/forms'
         MatSnackBarModule,
         HttpClientModule,
         MatInputModule,
-        FormsModule
+        FormsModule,
+        NgxJsonViewModule
     ],
     providers: [],
     bootstrap: [AppComponent]
