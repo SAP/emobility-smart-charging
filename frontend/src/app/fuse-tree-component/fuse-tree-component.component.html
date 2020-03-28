@@ -6,9 +6,9 @@
                 <mat-icon *ngIf="fuseTreeNode['@type']=='Fuse'">settings_input_hdmi</mat-icon>
 
                 {{fuseTreeNode['@type']}} (id={{fuseTreeNode.id}}):
-                ({{fuseTreeNode.fusePhase1}}A,
-                {{fuseTreeNode.fusePhase2}}A,
-                {{fuseTreeNode.fusePhase3}}A)
+                ({{fuseTreeNode["fusePhase1"]}}A,
+                {{fuseTreeNode["fusePhase2"]}}A,
+                {{fuseTreeNode["fusePhase3"]}}A)
 
                 <button *ngIf="fuseTreeNode['@type']=='ChargingStation' && getAssignedCar() == null" mat-raised-button
                         (click)="onClickAddCar()" class="buttonChangeInfrastructure">
@@ -21,7 +21,6 @@
                     Delete
                 </button>
             </div>
-            
         </div>
 
         <div class="divCarContainer floatLeft clearBoth icon-text blueBorderLeft"

@@ -44,6 +44,11 @@
                 </button>
             </div>
 
+            <div class="floatLeft clearBoth">
+                <button (click)="onClickSendRequest()" mat-raised-button color="primary">Optimize charge plans (send request
+                        to server)</button>
+            </div>
+
         </mat-expansion-panel>
 
         <mat-expansion-panel (opened)="data.settings.requestJSONExpanded = true"
@@ -57,7 +62,9 @@
                 </mat-panel-description>
             </mat-expansion-panel-header>
 
-            <pre>{{getRequestJSON()}}</pre>
+            <app-request-json-component [restApiRequest]="data.request">
+            </app-request-json-component>
+
         </mat-expansion-panel>
 
         <mat-expansion-panel (opened)="data.settings.responseExpanded = true"
@@ -71,20 +78,8 @@
                 </mat-panel-description>
             </mat-expansion-panel-header>
 
-            <div class="floatLeft clearBoth">
-                <button (click)="onClickSendRequest()" mat-raised-button color="primary">Optimize charge plans (send request
-                        to server)</button>
-            </div>
-            
-
-            <div *ngIf="responseJSON !== ''" class="floatLeft clearBoth">
-                <pre>{{responseJSON}}</pre>
-            </div>
-
-            <div *ngIf="exceptionName !== ''" class="floatLeft clearBoth">
-                <h2>An error has occured: {{exceptionName}}</h2>
-                <p>{{exceptionMessage}}</p>
-            </div>
+            <app-result-json-component [restApiResponse]="restApiResponse">
+            </app-result-json-component>
 
         </mat-expansion-panel>
 

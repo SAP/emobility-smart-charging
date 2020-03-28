@@ -1,5 +1,5 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { websiteDataType } from 'src/global';
+import { websiteDataType, restApiResponseType, restApiResponseErrorType } from 'src/global';
 import { Car, ChargingStationStore, FuseTree, ChargingStation, Fuse, CarAssignmentStore, FuseTreeNode, FuseTreeNodeUnion, OptimizeChargingProfilesRequest, OptimizeChargingProfilesResponse } from 'src/assets/server_types';
 import { MatTable, MatTab, ErrorStateMatcher, MatSelect, MatSnackBar, MatInput } from "@angular/material";
 import * as ObservableSlim from "observable-slim";
@@ -24,10 +24,14 @@ export class AppComponent {
         }
     }
 
-    exceptionName: string = ""; 
-    exceptionMessage: string = ""; 
+    restApiResponse: restApiResponseType = {
+        jsonContent: {},
+        error: {
+            name: "",
+            message: ""
+        }
+    }
 
-    responseJSON: string = ""; 
 
     constructor(private _snackBar: MatSnackBar,
         private httpClient: HttpClient) {
@@ -57,29 +61,29 @@ export class AppComponent {
 
         let url = window.location.protocol + "//" + window.location.hostname + ":" + port + "/api/v1/OptimizeChargingProfiles"; 
         this.resetResponseError(); 
-        this.responseJSON = ""; 
+        this.restApiResponse.jsonContent.cars = []; 
 
         this.httpClient
             .post<OptimizeChargingProfilesResponse>(url, this.data.request)
             .subscribe(response => {
-                this.responseJSON = JSON.stringify(response, null, 4); 
+                //this.restApiResponse.jsonContent = JSON.stringify(response, null, 4); 
+                this.restApiResponse.jsonContent = response; 
                 console.log("Result from server:"); 
                 console.log(response); 
             }, error => {
                 console.log("An error occured."); 
-                console.log(error.error); 
-                this.setResponseError(error.error); 
+                console.log(error); 
+                this.setResponseError(error); 
             }); 
 
     }
 
     resetResponseError(): void {
-        this.setResponseError({exceptionName: "", exceptionMessage: ""}); 
+        this.setResponseError({name: "",  message: ""}); 
     }
 
-    setResponseError(error: {exceptionName: string, exceptionMessage: string}) {
-        this.exceptionName = error.exceptionName; 
-        this.exceptionMessage = error.exceptionMessage; 
+    setResponseError(error: restApiResponseErrorType) {
+        this.restApiResponse.error = error; 
     }
 
     isPersistedInLocalStorage(): boolean {
@@ -94,7 +98,7 @@ export class AppComponent {
     persistToLocalStorage(): void {
         console.log("Persisting to local storage..."); 
         localStorage.setItem(this.local_storage_key, JSON.stringify(this.data)); 
-        this.openSnackBar("Data has been saved.", "Dismiss");
+        this.openSnackBar("Data and settings have been saved.", "Dismiss");
     }
 
     applyObserverFunctions(data: websiteDataType) {
@@ -108,10 +112,6 @@ export class AppComponent {
             console.log("Error loading data from local storage!");
             console.log(error);
         }
-    }
-
-    getRequestJSON(): string {
-        return JSON.stringify(this.data.request, null, 4); 
     }
 
     getNextFuseID(): number {
@@ -330,9 +330,9 @@ export class AppComponent {
         return this.data.request.state.currentTimeSeconds % 60; 
     }
 
-    @ViewChild("inputHours", { static: false }) inputHours: ElementRef
-    @ViewChild("inputMinutes", { static: false }) inputMinutes: ElementRef
-    @ViewChild("inputSeconds", { static: false }) inputSeconds: ElementRef
+    @ViewChild("inputHours") inputHours: ElementRef
+    @ViewChild("inputMinutes") inputMinutes: ElementRef
+    @ViewChild("inputSeconds") inputSeconds: ElementRef
     refreshCurrentTimeSeconds() {
         this.data.request.state.currentTimeSeconds = parseInt(this.inputHours.nativeElement.value)*3600 + parseInt(this.inputMinutes.nativeElement.value)*60 + parseInt(this.inputSeconds.nativeElement.value); 
     }

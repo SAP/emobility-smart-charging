@@ -23,10 +23,9 @@ COPY --from=build_server /workspace/app /workspace/app
 WORKDIR /workspace/app/frontend 
 
 RUN npm install
-RUN npm install -g @angular/cli@8.3.5
 
 # Build frontend (Angular 8)
-RUN ng build --base-href /playground/
+RUN npm run build:playground
 
 
 ##################
