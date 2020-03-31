@@ -4,9 +4,11 @@ import { Car, ChargingStationStore, FuseTree, ChargingStation, Fuse, CarAssignme
 import { MatTable, MatTab, ErrorStateMatcher, MatSelect, MatSnackBar, MatInput } from "@angular/material";
 import * as ObservableSlim from "observable-slim";
 import { HttpClient } from '@angular/common/http';
-import { error } from 'util';
-import { ChartDataSets } from 'chart.js';
+import { ChartDataSets, ChartOptions } from 'chart.js';
 import { Label, Color } from 'ng2-charts';
+
+import * as ChartAnnotation from 'chartjs-plugin-annotation';
+import * as Chart from 'chart.js';
 
 @Component({
     selector: 'app-root',
@@ -55,13 +57,20 @@ export class AppComponent {
         this.applyObserverFunctions(this.data);
     }
 
+    ngOnInit() {
+        // Register annotations in chart
+        // https://stackoverflow.com/questions/51664741/chartjs-plugin-annotations-not-displayed-in-angular-5
+        let namedChartAnnotation = ChartAnnotation;
+        namedChartAnnotation["id"]="annotation";
+        Chart.pluginService.register( namedChartAnnotation);
+    }
+
 
     onClickResetData(): void {
         this.data.request = this.getInitialRequest(); 
     }
 
     onClickSendRequest(): void {
-        //const  headers = new  HttpHeaders().set("X-CustomHttpHeader", "CUSTOM_VALUE");
 
         let port = (window.location.port === "4200") ? 8080 : window.location.port; // If in angular dev environment: Use 8080 (port of server in dev environment)
 
@@ -69,17 +78,42 @@ export class AppComponent {
         this.resetResponseError(); 
         this.restApiResponse.jsonContent = null; 
 
+        // Save original request for result chart (in case currentTimeSeconds and the fuseTree is changed)
+        const originalRequest = this.deepClone(this.data.request) as OptimizeChargingProfilesRequest; 
+
         this.httpClient
             .post<OptimizeChargingProfilesResponse>(url, this.data.request)
             .subscribe(response => {
                 this.restApiResponse.jsonContent = response; 
-                this.restApiResponse.chartAggregatedChargePlans = this.getChartAggregatedChargePlans(response); 
+                this.restApiResponse.chartAggregatedChargePlans = this.getChartAggregatedChargePlans(originalRequest, response); 
                 console.log("Result from server:"); 
                 console.log(response); 
             }, error => {
                 console.log("An error occured."); 
                 console.log(error); 
-                this.setResponseError(error); 
+                if (error.error) {
+                    // For REST API exceptions, use message returned by server
+
+                    // For semantic errors (example: try to optimize with car that hasn't arrived yet)
+                    if (error.error.exceptionName) {
+                        this.setResponseError({
+                            name: error.error.exceptionName + " (Status: " + error.status + ")", 
+                            message: error.error.exceptionMessage
+                        }); 
+                    }
+                    else {
+                        // For syntax errors (example: JSON could not be constructed)
+                        this.setResponseError({
+                            name: error.error.status  + " (Status: " + error.status + ")", 
+                            message: error.error.message
+                        }); 
+                    }
+                }
+                else {
+                    // For network exceptions, use browser error 
+                    this.setResponseError(error); 
+                }
+                
             }); 
 
     }
@@ -92,7 +126,8 @@ export class AppComponent {
         this.restApiResponse.error = error; 
     }
 
-    getChartAggregatedChargePlans(jsonContent: OptimizeChargingProfilesResponse): chartAggregatedChargePlansType {
+    getChartAggregatedChargePlans(originalRequest:OptimizeChargingProfilesRequest, jsonContent: OptimizeChargingProfilesResponse): chartAggregatedChargePlansType {
+
         const timeslotLength = 15*60; 
 
         let tMin = Number.MAX_VALUE; // First available car timestamp minus 15 minutes 
@@ -107,7 +142,7 @@ export class AppComponent {
             tMax = 24*3600; 
         }
       
-        tMin = Math.max(0, tMin-timeslotLength); 
+        tMin = Math.max(0, tMin-7*timeslotLength); 
         tMax = Math.min(24*3600, tMax+timeslotLength); 
 
 
@@ -128,7 +163,7 @@ export class AppComponent {
                 car.currentPlan[timeslot] * (car.canLoadPhase1+car.canLoadPhase2+car.canLoadPhase3) * 230 // How much Watt (W) will this EV draw at 230V?
             ).reduce((a, b) => a+b, 0); 
 
-            sumChargePlansW = Math.round(sumChargePlansW*1000) / 1000;  
+            sumChargePlansW = this.roundToNDecimals(sumChargePlansW, 3); 
 
             xValues.push(t); 
             yValues.push(sumChargePlansW); 
@@ -148,9 +183,15 @@ export class AppComponent {
             chartData: chartData, 
             chartLabels: chartLabels,
             chartOptions: { 
-               // steppedLine: 'before',
                 responsive: true,
-            },
+                scales: {
+                    yAxes: [{
+                        // Add buffer so that infrastructure annotation label is not cut off
+                        ticks: { suggestedMax: this.getInfrastructureLimitW(originalRequest.state.fuseTree)*1.1 }
+                    }]
+                },
+                annotation: this.getChartAnnotations(originalRequest, jsonContent)
+            } as ChartOptions,
             chartColors: [{
                 borderColor: 'black',
                 backgroundColor: 'rgba(255,255,0,0.28)',
@@ -162,6 +203,49 @@ export class AppComponent {
         console.log("Visualizing chart with data:"); 
         console.log(result); 
         return result; 
+    }
+
+    getChartAnnotations(originalRequest: OptimizeChargingProfilesRequest, jsonContent: OptimizeChargingProfilesResponse) {
+
+        // Use root fuse (phase1+phase2+phase3)*230V as infrastructure limit (horizontal line)
+        const rootFuse = originalRequest.state.fuseTree.rootFuse; 
+        const maxInfrastructurePowerW = this.getInfrastructureLimitW(originalRequest.state.fuseTree); 
+
+        // Use time=now (vertical line)
+        const timeNow = originalRequest.state.currentTimeSeconds;  
+
+        // https://codepen.io/jordanwillis/pen/qrXJLW
+        return {
+            annotations: [{
+                // Current time vertical line
+                type: 'line',
+                mode: 'vertical',
+                scaleID: 'x-axis-0',
+                value: this.toHH_MM(timeNow),
+                borderColor: 'blue',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                label: {
+                    enabled: true,
+                    content: "Current time",
+                    xAdjust: -45
+                }
+            }, {
+                // Infrastructure limit horizontal line
+                type: 'line',
+                mode: 'horizontal',
+                scaleID: 'y-axis-0',
+                value: maxInfrastructurePowerW,
+                borderColor: 'red',
+                borderWidth: 2,
+                borderDash: [5, 5],
+                label: {
+                    enabled: true,
+                    content: "Infrastructure limit (root fuse): " + maxInfrastructurePowerW + "W",
+                    yAdjust: -17
+                }
+            }]
+        }
     }
 
 
@@ -213,15 +297,37 @@ export class AppComponent {
         return highestID+1; 
     }
 
-    deleteFuseTreeNode(fuseTreeNode: FuseTreeNode) {
-        console.log("Removing " + fuseTreeNode["@type"] + " (id=" + fuseTreeNode.id + ") from tree..."); 
+    deleteFuseTreeNode(fuseTreeNodeParam: FuseTreeNode) {
+        console.log("Deleting " + fuseTreeNodeParam["@type"] + " (id=" + fuseTreeNodeParam.id + ") from tree..."); 
         // Traverse tree until found
-        this.traverseFuses(this.data.request.state.fuseTree.rootFuse, function(fuse: Fuse) {
-            if (fuse.children.indexOf(fuseTreeNode as FuseTreeNodeUnion) !== -1) {
-                fuse.children.splice(fuse.children.indexOf(fuseTreeNode as FuseTreeNodeUnion), 1); 
+        // fuseTreeNodeParam can be charging station or fuse
+        this.traverseFuses(this.data.request.state.fuseTree.rootFuse, function(fuse: FuseTreeNode) {
+            if (fuse.children.indexOf(fuseTreeNodeParam as FuseTreeNodeUnion) !== -1) {
+                
+                // Also delete all EVs, charging stations and carAssignments that are children of this fuseTreeNode
+                this.deleteAssignedCars(fuseTreeNodeParam); 
+
+                fuse.children.splice(fuse.children.indexOf(fuseTreeNodeParam as FuseTreeNodeUnion), 1); 
+
                 return; 
             }
         });
+    }
+
+    deleteAssignedCars(fuseTreeNodeParam: FuseTreeNode): void {
+        console.log("Deleting all assigned cars under " + fuseTreeNodeParam["@type"] + " (id=" + fuseTreeNodeParam.id + ")"); 
+        this.traverseFuses(fuseTreeNodeParam, function(fuseTreeNode: FuseTreeNode) {
+
+            for (let child of fuseTreeNode.children) {
+                console.log("Checking " + child["@type"] + " id=" + child.id + " for cars..."); 
+                if (child["@type"] === "ChargingStation") {
+                    if (this.isChargingStationAssigned(child) === true) {
+                        this.deleteCar(child); 
+                    }
+                }
+            }
+            
+        }); 
     }
 
     traverseFuses(fuse, callbackFunction) {
@@ -230,7 +336,7 @@ export class AppComponent {
             let currentFuse = fuses.pop();
             if (!currentFuse.children) continue; 
             
-            callbackFunction(currentFuse); 
+            callbackFunction.call(this, currentFuse); 
 
             for (let child of currentFuse.children) {
                 fuses.push(child); 
@@ -246,6 +352,9 @@ export class AppComponent {
         let newChargingStation = this.buildChargingStation(this.getNextChargingStationID()); 
         fuse.children.push(newChargingStation); 
     }
+    isChargingStationAssigned(chargingStation: ChargingStation) {
+        return this.getCarAssignment(chargingStation.id) !== null; 
+    }
 
 
     addCar(chargingStation: ChargingStation): void {
@@ -259,6 +368,7 @@ export class AppComponent {
     deleteCar(chargingStation: ChargingStation): void {
         let carAssignment = this.getCarAssignment(chargingStation.id); 
         let car = this.getCar(carAssignment.carID); 
+        console.log("Deleting car with id=" + car.id + " and car assignment"); 
         this.getCars().splice(this.getCars().indexOf(car), 1);
         this.getCarAssignments().splice(this.getCarAssignments().indexOf(carAssignment), 1); 
     }
@@ -268,7 +378,7 @@ export class AppComponent {
     getCars(): Array<Car> {
         return this.data.request.state.cars; 
     }
-    getCar(carID: number) {
+    getCar(carID: number): Car | null {
         for (let car of this.data.request.state.cars) {
             if (car.id === carID) {
                 return car; 
@@ -289,7 +399,7 @@ export class AppComponent {
         return null; 
     }
 
-    getAssignedCar(chargingStationID: number) {
+    getAssignedCar(chargingStationID: number): Car | null {
         let carAssignment = this.getCarAssignment(chargingStationID); 
         if (carAssignment !== null) {
             return this.getCar(carAssignment.carID); 
@@ -353,6 +463,14 @@ export class AppComponent {
         return fuseTree; 
     }
 
+    getInfrastructureLimitW(fuseTree: FuseTree): number {
+        const rootFuse = fuseTree.rootFuse; 
+        return this.getFusePowerLimitW(rootFuse); 
+    }
+    getFusePowerLimitW(fuseTreeNode: FuseTreeNode): number {
+        return (fuseTreeNode["fusePhase1"] + fuseTreeNode["fusePhase2"] + fuseTreeNode["fusePhase3"])*230; 
+    }
+
     getChargingStationsFromFuseTree(fuseTree: FuseTree) {
         let chargingStations = []; 
         this.traverseFuses(fuseTree.rootFuse, (fuse: Fuse) => {
@@ -408,6 +526,10 @@ export class AppComponent {
     getTimeSeconds() {
         return this.data.request.state.currentTimeSeconds % 60; 
     }
+    roundToNDecimals(myNumber: number, nDecimals: number): number {
+        const rounder = Math.pow(10, nDecimals); 
+        return Math.round(myNumber * rounder) / rounder;  
+    }
 
     @ViewChild("inputHours") inputHours: ElementRef
     @ViewChild("inputMinutes") inputMinutes: ElementRef
@@ -426,6 +548,9 @@ export class AppComponent {
         });
     }
 
+    deepClone(object: any): any {
+        return JSON.parse(JSON.stringify(object)); 
+    }
 
 }
 

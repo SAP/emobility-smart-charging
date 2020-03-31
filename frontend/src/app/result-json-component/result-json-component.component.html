@@ -1,4 +1,6 @@
+
 <div *ngIf="restApiResponse.jsonContent !== null && restApiResponse.error.name === ''" class="floatLeft clearBoth">
+    <h2>REST API JSON result</h2>
     <ngx-json-view [data]="restApiResponse.jsonContent" [levelOpen]="2"></ngx-json-view>
 </div> 
 

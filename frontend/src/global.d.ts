@@ -1,5 +1,5 @@
 import { OptimizeChargingProfilesRequest, Car, OptimizeChargingProfilesResponse } from "./assets/server_types";
-import { ChartDataSets, ChartType } from "chart.js";
+import { ChartDataSets, ChartType, ChartOptions } from "chart.js";
 import { Label, Color } from "ng2-charts";
 
 
@@ -40,10 +40,7 @@ declare type restApiResponseType = {
 declare type chartAggregatedChargePlansType = {
     chartData: ChartDataSets[],
     chartLabels: Label[],
-    chartOptions: {
-        responsive: boolean,
-        steppedLine?: any
-    },
+    chartOptions: ChartOptions, 
     chartColors: Color[],
     chartLegend: boolean, 
     chartPlugins: any[],

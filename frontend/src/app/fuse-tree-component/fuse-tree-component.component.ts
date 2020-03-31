@@ -28,6 +28,23 @@ export class FuseTreeComponentComponent implements OnInit {
         
     }
 
+    getFuseTreeNodeLabel(fuseTreeNode: FuseTreeNode): string {
+        let label: string; 
+        if (fuseTreeNode["fusePhase1"] === fuseTreeNode["fusePhase2"] &&
+            fuseTreeNode["fusePhase2"] === fuseTreeNode["fusePhase3"]) {
+
+            label = fuseTreeNode["fusePhase1"] + "A~3"; 
+        }
+        else {
+            label = fuseTreeNode["fusePhase1"] + "A/" + fuseTreeNode["fusePhase2"] + "A/" + fuseTreeNode["fusePhase3"] + "A"; 
+        }
+        const powerKW = this.appParent.getFusePowerLimitW(fuseTreeNode) / 1000; 
+        label += " (" + this.appParent.roundToNDecimals(powerKW, 3) + "kW)"; 
+
+        return label; 
+    }
+
+
     onClickDeleteFuseTreeNode() {
         this.appParent.deleteFuseTreeNode(this.fuseTreeNode); 
     }
