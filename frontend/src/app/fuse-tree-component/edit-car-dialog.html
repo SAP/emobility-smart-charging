@@ -1,0 +1,93 @@
+<h2 mat-dialog-title>Editing Car (id={{data.id}})</h2>
+
+
+<div mat-dialog-content>
+
+    <form class="formEditDialog">
+        <div class="divEditDialogContainer">
+            <h2>Individual car data</h2>
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Start capacity (ampere hours)</mat-label>
+                <input name="inputStartCapacity" type="number" matInput placeholder="Start capacity"
+                    [(ngModel)]="data.startCapacity">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Minimum required capacity (ampere hours)</mat-label>
+                <input name="inputMinCapacity" type="number" matInput placeholder="Battery minimum capacity"
+                    [(ngModel)]="data.minLoadingState">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Arrival time (seconds after midnight)</mat-label>
+                <input name="inputArrivalTime" type="number" matInput placeholder="Arrival time"
+                    [(ngModel)]="data.timestampArrival">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Departure time (seconds after midnight, optional)</mat-label>
+                <input name="inputDepartureTime" type="number" matInput placeholder="Departure time"
+                    [(ngModel)]="data.timestampDeparture">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Car name (optional)</mat-label>
+                <input name="inputName" type="text" matInput placeholder="Car name" [(ngModel)]="data.name">
+            </mat-form-field>
+        </div>
+
+        <div class="divEditDialogContainer">
+            <h2>Car model data</h2>
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Car type</mat-label>
+                <mat-select [(value)]="data.carType">
+                    <mat-option value="BEV">Battery electric vehicle (BEV)</mat-option>
+                    <mat-option value="PHEV">Plug-in hybrid electric vehicle (PHEV) </mat-option>
+                </mat-select>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Battery maximum capacity (ampere hours)</mat-label>
+                <input name="inputMaxCapacity" type="number" matInput placeholder="Battery maximum capacity"
+                    [(ngModel)]="data.maxCapacity">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Minimum current per phase (ampere)</mat-label>
+                <input name="inputMinCurrent" type="number" matInput placeholder="Minimum current per phase"
+                    [(ngModel)]="data.minCurrentPerPhase" (change)="refreshPhases()">
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Maximum current per phase (ampere)</mat-label>
+                <input name="inputMaxCurrent" type="number" matInput placeholder="Maximum current per phase"
+                    [(ngModel)]="data.maxCurrentPerPhase" (change)="refreshPhases()">
+            </mat-form-field>
+
+            <mat-checkbox name="inputCanLoadPhase1" class="checkboxChartSetting" ngDefaultControl [disabled]="true"
+                (change)="refreshPhases()" [(ngModel)]="data.canLoadPhase1">Can load on phase 1</mat-checkbox>
+            <mat-checkbox name="inputCanLoadPhase2" class="checkboxChartSetting" ngDefaultControl
+                (change)="refreshPhases()" [(ngModel)]="data.canLoadPhase2">Can load on phase 2</mat-checkbox>
+            <mat-checkbox name="inputCanLoadPhase3" class="checkboxChartSetting" ngDefaultControl
+                (change)="refreshPhases()" [(ngModel)]="data.canLoadPhase3">Can load on phase 3</mat-checkbox>
+
+
+            <mat-form-field appearance="outline" class="inputEditDialog">
+                <mat-label>Car model name (optional)</mat-label>
+                <input name="inputModelname" type="text" matInput placeholder="Model name" [(ngModel)]="data.name">
+            </mat-form-field>
+        </div>
+
+        <div class="divEditDialogContainer">
+            <h2>Summary</h2>
+            <p>Power rating: {{getEVPowerW() / 1000}}kW</p>
+            <p>Starting state of charge (SoC): {{getSoC()}}</p>
+            <p>Minimum state of charge (SoC): {{getMinSoC()}}</p>
+        </div>
+    </form>
+
+</div>
+
+
+<div mat-dialog-actions>
+    <button mat-button mat-raised-button (click)="onClickClose()">
+        <mat-icon>check</mat-icon>
+        Ok
+    </button>
+</div>

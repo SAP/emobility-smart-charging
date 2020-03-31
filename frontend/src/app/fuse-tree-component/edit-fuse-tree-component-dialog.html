@@ -1,0 +1,22 @@
+<h2 mat-dialog-title>Editing {{data['@type']}} (id={{data.id}}<span *ngIf="data.id === 0 && data['@type']==='Fuse'">, root fuse</span>)</h2>
+
+
+<div mat-dialog-content>
+    <form class="formEditDialog">
+        <p>Power rating (kW): {{getPowerW() / 1000}}</p>
+        <mat-form-field appearance="outline" class="inputEditDialog">
+            <mat-label>Current limit per phase (ampere)</mat-label>
+            <input name="inputFuse" type="number" matInput placeholder="Ampere" [(ngModel)]="data['fusePhase1']" (change)="onChangeFuse()">
+        </mat-form-field>
+
+        <div *ngIf="data['@type']==='ChargingStation'">
+        </div>
+    </form>
+</div>
+
+<div mat-dialog-actions>
+    <button mat-button mat-raised-button (click)="onClickClose()">
+        <mat-icon>check</mat-icon>
+        Ok
+    </button>
+</div>

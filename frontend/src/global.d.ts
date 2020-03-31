@@ -5,13 +5,14 @@ import { Label, Color } from "ng2-charts";
 
 declare type websiteDataType = {
     request: OptimizeChargingProfilesRequest,
-    settings: websiteSettings
+    settings: websiteSettingsType
 }
 
 
-declare type websiteSettings = {
+declare type websiteSettingsType = {
     requestJSONExpanded: boolean,
-    responseExpanded: boolean
+    responseExpanded: boolean,
+    chartChargePlans: chartChargePlansSettingsType
 }
 
 
@@ -22,7 +23,7 @@ declare type restApiResponseErrorType = {
 
 declare type restApiResponseType = {
     jsonContent: OptimizeChargingProfilesResponse | null, 
-    chartAggregatedChargePlans: chartAggregatedChargePlansType | null, 
+    chartAggregatedChargePlans: chartChargePlansType | null, 
     error: restApiResponseErrorType
 }
 
@@ -37,7 +38,7 @@ declare type restApiResponseType = {
 
 
 // Used for graph in result to show sum of all charge plans over time
-declare type chartAggregatedChargePlansType = {
+declare type chartChargePlansType = {
     chartData: ChartDataSets[],
     chartLabels: Label[],
     chartOptions: ChartOptions, 
@@ -47,7 +48,22 @@ declare type chartAggregatedChargePlansType = {
     chartType: ChartType
 }
 
+declare type chartXAxisRange = {
+    tMin: number, 
+    tMax: number
+}
 
+declare type chartChargePlansSettingsType = {
+    showInfrastructureLimit: boolean,
+    showCurrentTime: boolean,
+    showIndividualCarPlans: boolean
+}
 
+declare type chartIndividualChargePlanType = {
+    carID: number,
+    carName: string,
+    carModelName: string, 
+    yValues: number[]
+}
 
 

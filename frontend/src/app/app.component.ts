@@ -1,5 +1,5 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { websiteDataType, restApiResponseType, restApiResponseErrorType, chartAggregatedChargePlansType } from 'src/global';
+import { websiteDataType, restApiResponseType, restApiResponseErrorType, chartChargePlansType, websiteSettingsType } from 'src/global';
 import { Car, ChargingStationStore, FuseTree, ChargingStation, Fuse, CarAssignmentStore, FuseTreeNode, FuseTreeNodeUnion, OptimizeChargingProfilesRequest, OptimizeChargingProfilesResponse } from 'src/assets/server_types';
 import { MatTable, MatTab, ErrorStateMatcher, MatSelect, MatSnackBar, MatInput } from "@angular/material";
 import * as ObservableSlim from "observable-slim";
@@ -9,6 +9,7 @@ import { Label, Color } from 'ng2-charts';
 
 import * as ChartAnnotation from 'chartjs-plugin-annotation';
 import * as Chart from 'chart.js';
+import { ChartChargePlans } from './utils/ChartChargePlans';
 
 @Component({
     selector: 'app-root',
@@ -23,11 +24,10 @@ export class AppComponent {
     // Data structure persisted in local storage
     data: websiteDataType = {
         request: this.getInitialRequest(),
-        settings: {
-            requestJSONExpanded: false,
-            responseExpanded: true
-        }
+        settings: this.getInitialSettings()
     }
+
+    originalApiRequest: OptimizeChargingProfilesRequest = null; 
 
     // Response from server and potential error
     restApiResponse: restApiResponseType = {
@@ -68,6 +68,7 @@ export class AppComponent {
 
     onClickResetData(): void {
         this.data.request = this.getInitialRequest(); 
+        this.data.settings = this.getInitialSettings(); 
     }
 
     onClickSendRequest(): void {
@@ -79,13 +80,13 @@ export class AppComponent {
         this.restApiResponse.jsonContent = null; 
 
         // Save original request for result chart (in case currentTimeSeconds and the fuseTree is changed)
-        const originalRequest = this.deepClone(this.data.request) as OptimizeChargingProfilesRequest; 
+        this.originalApiRequest = this.deepClone(this.data.request) as OptimizeChargingProfilesRequest; 
 
         this.httpClient
             .post<OptimizeChargingProfilesResponse>(url, this.data.request)
             .subscribe(response => {
                 this.restApiResponse.jsonContent = response; 
-                this.restApiResponse.chartAggregatedChargePlans = this.getChartAggregatedChargePlans(originalRequest, response); 
+                this.refreshChartChargePlans(); 
                 console.log("Result from server:"); 
                 console.log(response); 
             }, error => {
@@ -93,7 +94,6 @@ export class AppComponent {
                 console.log(error); 
                 if (error.error) {
                     // For REST API exceptions, use message returned by server
-
                     // For semantic errors (example: try to optimize with car that hasn't arrived yet)
                     if (error.error.exceptionName) {
                         this.setResponseError({
@@ -115,7 +115,6 @@ export class AppComponent {
                 }
                 
             }); 
-
     }
 
     resetResponseError(): void {
@@ -126,127 +125,12 @@ export class AppComponent {
         this.restApiResponse.error = error; 
     }
 
-    getChartAggregatedChargePlans(originalRequest:OptimizeChargingProfilesRequest, jsonContent: OptimizeChargingProfilesResponse): chartAggregatedChargePlansType {
-
-        const timeslotLength = 15*60; 
-
-        let tMin = Number.MAX_VALUE; // First available car timestamp minus 15 minutes 
-        let tMax = -1; // Last available car timestamp plus 15 minutes 
-        
-        jsonContent.cars.forEach((car, index) => {
-            if (tMin > car.timestampArrival) tMin = car.timestampArrival; 
-            if (tMax < car.timestampDeparture) tMax = car.timestampDeparture; 
-        }); 
-
-        if (tMax === 0) {
-            tMax = 24*3600; 
-        }
-      
-        tMin = Math.max(0, tMin-7*timeslotLength); 
-        tMax = Math.min(24*3600, tMax+timeslotLength); 
-
-
-        // Create a step chart
-        // Begin xValues with xMin
-        const xValues: number[] = [tMin]; 
-        const yValues: number[] = [0]; 
-        
-        for (let timeslot=0; timeslot<24*4; timeslot++) {
-            // Each timeslot is 15 minutes
-            // Each car has a charge plan with array of length 96
-            // Each element is single phase charging in Ampere  
-            let t = timeslot * timeslotLength; 
-
-            if (t < tMin || t > tMax) continue; 
-
-            let sumChargePlansW = jsonContent.cars.map(car => 
-                car.currentPlan[timeslot] * (car.canLoadPhase1+car.canLoadPhase2+car.canLoadPhase3) * 230 // How much Watt (W) will this EV draw at 230V?
-            ).reduce((a, b) => a+b, 0); 
-
-            sumChargePlansW = this.roundToNDecimals(sumChargePlansW, 3); 
-
-            xValues.push(t); 
-            yValues.push(sumChargePlansW); 
-        }
-
-        // Add a final point at tMax
-        xValues.push(tMax); 
-        yValues.push(0);         
-
-
-        let chartData: ChartDataSets[] = [
-            {data: yValues, label: "Charge plans", steppedLine: true} 
-        ]; 
-        let chartLabels: Label[] = xValues.map(n => this.toHH_MM(n)); 
-
-        let result: chartAggregatedChargePlansType = {
-            chartData: chartData, 
-            chartLabels: chartLabels,
-            chartOptions: { 
-                responsive: true,
-                scales: {
-                    yAxes: [{
-                        // Add buffer so that infrastructure annotation label is not cut off
-                        ticks: { suggestedMax: this.getInfrastructureLimitW(originalRequest.state.fuseTree)*1.1 }
-                    }]
-                },
-                annotation: this.getChartAnnotations(originalRequest, jsonContent)
-            } as ChartOptions,
-            chartColors: [{
-                borderColor: 'black',
-                backgroundColor: 'rgba(255,255,0,0.28)',
-            }],
-            chartLegend: true, 
-            chartPlugins: [],
-            chartType: "line"
-        }; 
-        console.log("Visualizing chart with data:"); 
-        console.log(result); 
-        return result; 
+    refreshChartChargePlans() {
+        console.log("Refreshing chart..."); 
+        this.restApiResponse.chartAggregatedChargePlans = ChartChargePlans.getAggregatedChargePlans(this.originalApiRequest, this.restApiResponse.jsonContent, this.data.settings.chartChargePlans); 
     }
 
-    getChartAnnotations(originalRequest: OptimizeChargingProfilesRequest, jsonContent: OptimizeChargingProfilesResponse) {
 
-        // Use root fuse (phase1+phase2+phase3)*230V as infrastructure limit (horizontal line)
-        const rootFuse = originalRequest.state.fuseTree.rootFuse; 
-        const maxInfrastructurePowerW = this.getInfrastructureLimitW(originalRequest.state.fuseTree); 
-
-        // Use time=now (vertical line)
-        const timeNow = originalRequest.state.currentTimeSeconds;  
-
-        // https://codepen.io/jordanwillis/pen/qrXJLW
-        return {
-            annotations: [{
-                // Current time vertical line
-                type: 'line',
-                mode: 'vertical',
-                scaleID: 'x-axis-0',
-                value: this.toHH_MM(timeNow),
-                borderColor: 'blue',
-                borderWidth: 2,
-                borderDash: [5, 5],
-                label: {
-                    enabled: true,
-                    content: "Current time",
-                    xAdjust: -45
-                }
-            }, {
-                // Infrastructure limit horizontal line
-                type: 'line',
-                mode: 'horizontal',
-                scaleID: 'y-axis-0',
-                value: maxInfrastructurePowerW,
-                borderColor: 'red',
-                borderWidth: 2,
-                borderDash: [5, 5],
-                label: {
-                    enabled: true,
-                    content: "Infrastructure limit (root fuse): " + maxInfrastructurePowerW + "W",
-                    yAdjust: -17
-                }
-            }]
-        }
-    }
 
 
     isPersistedInLocalStorage(): boolean {
@@ -356,9 +240,18 @@ export class AppComponent {
         return this.getCarAssignment(chargingStation.id) !== null; 
     }
 
+    getNextCarID(): number {
+        let maxID = -1; 
+        this.data.request.state.cars.forEach((car) => {
+            if (maxID < car.id) {
+                maxID = car.id; 
+            }
+        });
+        return maxID + 1; 
+    }
 
     addCar(chargingStation: ChargingStation): void {
-        let newCar = this.buildCar(this.getNumberOfCars()); 
+        let newCar = this.buildCar(this.getNextCarID()); 
         this.data.request.state.cars.push(newCar); 
         this.data.request.state.carAssignments.push({
             carID: newCar.id,
@@ -425,6 +318,18 @@ export class AppComponent {
         }
     }
 
+    getInitialSettings(): websiteSettingsType {
+        return {
+            requestJSONExpanded: false,
+            responseExpanded: true,
+            chartChargePlans: {
+                showCurrentTime: true,
+                showIndividualCarPlans: true,
+                showInfrastructureLimit: true
+            }
+        }; 
+    }
+    
     getInitialRequest(): OptimizeChargingProfilesRequest {
         let fuseTree = this.getInitialFuseTree();
         return {
@@ -463,14 +368,6 @@ export class AppComponent {
         return fuseTree; 
     }
 
-    getInfrastructureLimitW(fuseTree: FuseTree): number {
-        const rootFuse = fuseTree.rootFuse; 
-        return this.getFusePowerLimitW(rootFuse); 
-    }
-    getFusePowerLimitW(fuseTreeNode: FuseTreeNode): number {
-        return (fuseTreeNode["fusePhase1"] + fuseTreeNode["fusePhase2"] + fuseTreeNode["fusePhase3"])*230; 
-    }
-
     getChargingStationsFromFuseTree(fuseTree: FuseTree) {
         let chargingStations = []; 
         this.traverseFuses(fuseTree.rootFuse, (fuse: Fuse) => {
@@ -504,19 +401,6 @@ export class AppComponent {
         }
     }
 
-    toHH_MM_SS(secondsAfterMidnight): string {
-        var date = new Date(null);
-        date.setSeconds(secondsAfterMidnight);
-        var result = date.toISOString().substr(11, 8);
-        return result; 
-    }
-    toHH_MM(secondsAfterMidnight): string {
-        var date = new Date(null);
-        date.setSeconds(secondsAfterMidnight);
-        var result = date.toISOString().substr(11, 5);
-        return result; 
-    }
-
     getTimeHours() {
         return Math.floor(this.data.request.state.currentTimeSeconds / 3600); 
     }
@@ -525,10 +409,6 @@ export class AppComponent {
     }
     getTimeSeconds() {
         return this.data.request.state.currentTimeSeconds % 60; 
-    }
-    roundToNDecimals(myNumber: number, nDecimals: number): number {
-        const rounder = Math.pow(10, nDecimals); 
-        return Math.round(myNumber * rounder) / rounder;  
     }
 
     @ViewChild("inputHours") inputHours: ElementRef

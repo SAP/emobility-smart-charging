@@ -32,3 +32,27 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .invalidValue {
     color: red; 
 }
+
+
+
+
+/*******
+ Edit fuse tree node / car dialog
+*******/
+
+/**
+    All children of the form
+*/ 
+.divEditDialogContainer {
+    float: left; 
+    width: 50%
+}
+.divEditDialogContainer > * {
+    float: left; 
+    clear: both; 
+}
+
+.inputEditDialog  {
+
+    width: 90%; 
+}

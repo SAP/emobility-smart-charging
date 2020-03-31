@@ -92,6 +92,19 @@
                 </canvas>
             </div>
 
+            <div>
+                <h3>Chart settings</h3>
+                <mat-checkbox name="checkboxShowInfrastructureLimit" class="checkboxChartSetting" ngDefaultControl 
+                (change)="refreshChartChargePlans()"
+                [(ngModel)]="data.settings.chartChargePlans.showInfrastructureLimit" >Show infrastructure limit</mat-checkbox>
+                <mat-checkbox name="checkboxShowCurrentTime" class="checkboxChartSetting" ngDefaultControl 
+                (change)="refreshChartChargePlans()"
+                [(ngModel)]="data.settings.chartChargePlans.showCurrentTime">Show current time</mat-checkbox>
+                <mat-checkbox name="checkboxShowIndividualCarPlans" class="checkboxChartSetting" ngDefaultControl 
+                (change)="refreshChartChargePlans()"
+                [(ngModel)]="data.settings.chartChargePlans.showIndividualCarPlans">Show individual car plans</mat-checkbox>
+            </div>
+
            
 
             <app-result-json-component [restApiResponse]="restApiResponse">
