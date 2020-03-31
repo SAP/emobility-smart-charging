@@ -16,6 +16,7 @@ import { ResultJsonComponentComponent } from './result-json-component/result-jso
 
 import { NgxJsonViewModule } from 'ng-json-view';
 import { RequestJsonComponentComponent } from './request-json-component/request-json-component.component';
+import { ChartsModule } from 'ng2-charts';
 
 @NgModule({
     declarations: [
@@ -28,6 +29,7 @@ import { RequestJsonComponentComponent } from './request-json-component/request-
         BrowserModule,
         AppRoutingModule,
         BrowserAnimationsModule,
+        ChartsModule, 
         MatExpansionModule,
         MatButtonModule,
         MatIconModule,

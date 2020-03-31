@@ -49,6 +49,7 @@
                         to server)</button>
             </div>
 
+
         </mat-expansion-panel>
 
         <mat-expansion-panel (opened)="data.settings.requestJSONExpanded = true"
@@ -81,9 +82,20 @@
             <app-result-json-component [restApiResponse]="restApiResponse">
             </app-result-json-component>
 
+            <canvas *ngIf="restApiResponse.chartAggregatedChargePlans !== null"  baseChart 
+                [datasets]="restApiResponse.chartAggregatedChargePlans.chartData" 
+                [labels]="restApiResponse.chartAggregatedChargePlans.chartLabels" 
+                [options]="restApiResponse.chartAggregatedChargePlans.chartOptions"
+                [colors]="restApiResponse.chartAggregatedChargePlans.chartColors" 
+                [legend]="restApiResponse.chartAggregatedChargePlans.chartLegend" 
+                [chartType]="restApiResponse.chartAggregatedChargePlans.chartType" 
+                [plugins]="restApiResponse.chartAggregatedChargePlans.chartPlugins">
+            </canvas>
+                
         </mat-expansion-panel>
 
     </mat-accordion>
+
 
 </div>
 

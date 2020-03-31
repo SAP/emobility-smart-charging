@@ -1,10 +1,12 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
-import { websiteDataType, restApiResponseType, restApiResponseErrorType } from 'src/global';
+import { websiteDataType, restApiResponseType, restApiResponseErrorType, chartAggregatedChargePlansType } from 'src/global';
 import { Car, ChargingStationStore, FuseTree, ChargingStation, Fuse, CarAssignmentStore, FuseTreeNode, FuseTreeNodeUnion, OptimizeChargingProfilesRequest, OptimizeChargingProfilesResponse } from 'src/assets/server_types';
 import { MatTable, MatTab, ErrorStateMatcher, MatSelect, MatSnackBar, MatInput } from "@angular/material";
 import * as ObservableSlim from "observable-slim";
 import { HttpClient } from '@angular/common/http';
 import { error } from 'util';
+import { ChartDataSets } from 'chart.js';
+import { Label, Color } from 'ng2-charts';
 
 @Component({
     selector: 'app-root',
@@ -13,9 +15,10 @@ import { error } from 'util';
 })
 export class AppComponent {
 
-    local_storage_key: string = "data"; 
+    
+    localStorageKey: string = "data"; 
 
-    // Values: Persisted in local storage
+    // Data structure persisted in local storage
     data: websiteDataType = {
         request: this.getInitialRequest(),
         settings: {
@@ -24,13 +27,16 @@ export class AppComponent {
         }
     }
 
+    // Response from server and potential error
     restApiResponse: restApiResponseType = {
-        jsonContent: {},
+        jsonContent: null,
+        chartAggregatedChargePlans: null, 
         error: {
             name: "",
             message: ""
         }
     }
+
 
 
     constructor(private _snackBar: MatSnackBar,
@@ -61,13 +67,13 @@ export class AppComponent {
 
         let url = window.location.protocol + "//" + window.location.hostname + ":" + port + "/api/v1/OptimizeChargingProfiles"; 
         this.resetResponseError(); 
-        this.restApiResponse.jsonContent.cars = []; 
+        this.restApiResponse.jsonContent = null; 
 
         this.httpClient
             .post<OptimizeChargingProfilesResponse>(url, this.data.request)
             .subscribe(response => {
-                //this.restApiResponse.jsonContent = JSON.stringify(response, null, 4); 
                 this.restApiResponse.jsonContent = response; 
+                this.restApiResponse.chartAggregatedChargePlans = this.getChartAggregatedChargePlans(response); 
                 console.log("Result from server:"); 
                 console.log(response); 
             }, error => {
@@ -86,18 +92,91 @@ export class AppComponent {
         this.restApiResponse.error = error; 
     }
 
+    getChartAggregatedChargePlans(jsonContent: OptimizeChargingProfilesResponse): chartAggregatedChargePlansType {
+        const timeslotLength = 15*60; 
+
+        let tMin = Number.MAX_VALUE; // First available car timestamp minus 15 minutes 
+        let tMax = -1; // Last available car timestamp plus 15 minutes 
+        
+        jsonContent.cars.forEach((car, index) => {
+            if (tMin > car.timestampArrival) tMin = car.timestampArrival; 
+            if (tMax < car.timestampDeparture) tMax = car.timestampDeparture; 
+        }); 
+
+        if (tMax === 0) {
+            tMax = 24*3600; 
+        }
+      
+        tMin = Math.max(0, tMin-timeslotLength); 
+        tMax = Math.min(24*3600, tMax+timeslotLength); 
+
+
+        // Create a step chart
+        // Begin xValues with xMin
+        const xValues: number[] = [tMin]; 
+        const yValues: number[] = [0]; 
+        
+        for (let timeslot=0; timeslot<24*4; timeslot++) {
+            // Each timeslot is 15 minutes
+            // Each car has a charge plan with array of length 96
+            // Each element is single phase charging in Ampere  
+            let t = timeslot * timeslotLength; 
+
+            if (t < tMin || t > tMax) continue; 
+
+            let sumChargePlansW = jsonContent.cars.map(car => 
+                car.currentPlan[timeslot] * (car.canLoadPhase1+car.canLoadPhase2+car.canLoadPhase3) * 230 // How much Watt (W) will this EV draw at 230V?
+            ).reduce((a, b) => a+b, 0); 
+
+            sumChargePlansW = Math.round(sumChargePlansW*1000) / 1000;  
+
+            xValues.push(t); 
+            yValues.push(sumChargePlansW); 
+        }
+
+        // Add a final point at tMax
+        xValues.push(tMax); 
+        yValues.push(0);         
+
+
+        let chartData: ChartDataSets[] = [
+            {data: yValues, label: "Charge plans", steppedLine: true} 
+        ]; 
+        let chartLabels: Label[] = xValues.map(n => this.toHH_MM(n)); 
+
+        let result: chartAggregatedChargePlansType = {
+            chartData: chartData, 
+            chartLabels: chartLabels,
+            chartOptions: { 
+               // steppedLine: 'before',
+                responsive: true,
+            },
+            chartColors: [{
+                borderColor: 'black',
+                backgroundColor: 'rgba(255,255,0,0.28)',
+            }],
+            chartLegend: true, 
+            chartPlugins: [],
+            chartType: "line"
+        }; 
+        console.log("Visualizing chart with data:"); 
+        console.log(result); 
+        return result; 
+    }
+
+
     isPersistedInLocalStorage(): boolean {
-        return localStorage.getItem(this.local_storage_key) !== null; 
+        return localStorage.getItem(this.localStorageKey) !== null; 
     }
 
     initFromLocalStorage(): void {
-        let savedData = JSON.parse(localStorage.getItem(this.local_storage_key)); 
+        let savedData = JSON.parse(localStorage.getItem(this.localStorageKey)); 
         this.data = savedData; 
     }
 
     persistToLocalStorage(): void {
         console.log("Persisting to local storage..."); 
-        localStorage.setItem(this.local_storage_key, JSON.stringify(this.data)); 
+        localStorage.setItem(this.localStorageKey, JSON.stringify(this.data)); 
         this.openSnackBar("Data and settings have been saved.", "Dismiss");
     }
 

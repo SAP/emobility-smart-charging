@@ -1,7 +1,6 @@
-<div *ngIf="restApiResponse.jsonContent.cars !== undefined && restApiResponse.error.name === ''" class="floatLeft clearBoth">
+<div *ngIf="restApiResponse.jsonContent !== null && restApiResponse.error.name === ''" class="floatLeft clearBoth">
     <ngx-json-view [data]="restApiResponse.jsonContent" [levelOpen]="2"></ngx-json-view>
 </div> 
-
 
 
 <div *ngIf="restApiResponse.error.name !== ''" class="floatLeft clearBoth">
