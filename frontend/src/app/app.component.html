@@ -50,6 +50,11 @@
             </div>
 
 
+            <div class="floatLeft clearBoth" style="width: 100%">
+                <app-fuse-tree-circuit-diagram [state]="data.request.state" [appParent]="this"></app-fuse-tree-circuit-diagram>
+            </div>
+
+
         </mat-expansion-panel>
 
         <mat-expansion-panel (opened)="data.settings.requestJSONExpanded = true"

@@ -67,3 +67,30 @@ declare type chartIndividualChargePlanType = {
 }
 
 
+
+// SVG Circuit diagram types
+declare type circuitDiagramSettingsType = {
+    marginLeft: number,
+    marginTop: number,
+    rowHeight: number,
+    rowBuffer: number, 
+    columnWidth: number,
+
+    // margin between cables
+    cable: {
+        phaseMargin: number,
+        lengthWithoutPhases: number,
+        horizontalX2Offset: number
+    },
+
+    // The fuse rectangle itself
+    fuse: {
+        width: number,
+        height: number
+    },
+
+    chargeStation: {
+        width: number, 
+        height: number
+    }
+}; 

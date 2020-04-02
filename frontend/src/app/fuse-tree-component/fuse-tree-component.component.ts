@@ -22,30 +22,12 @@ export class FuseTreeComponentComponent implements OnInit {
 
     }
 
-    getAssignedCar() {
-        if (this.fuseTreeNode["@type"] === "ChargingStation") {
-            return this.appParent.getAssignedCar(this.fuseTreeNode.id);
-        }
-        else {
-            return null;
-        }
-
+    getAssignedCar(): Car | null {
+        return this.appParent.getAssignedCarByFuseTreeNode(this.fuseTreeNode); 
     }
 
     getFuseTreeNodeLabel(fuseTreeNode: FuseTreeNode): string {
-        let label: string;
-        if (fuseTreeNode["fusePhase1"] === fuseTreeNode["fusePhase2"] &&
-            fuseTreeNode["fusePhase2"] === fuseTreeNode["fusePhase3"]) {
-
-            label = fuseTreeNode["fusePhase1"] + "A~3";
-        }
-        else {
-            label = fuseTreeNode["fusePhase1"] + "A/" + fuseTreeNode["fusePhase2"] + "A/" + fuseTreeNode["fusePhase3"] + "A";
-        }
-        const powerKW = Utils.getFusePowerLimitW(fuseTreeNode) / 1000;
-        label += " (" + Utils.roundToNDecimals(powerKW, 3) + "kW)";
-
-        return label;
+        return Utils.getFuseTreeNodeLabel(fuseTreeNode); 
     }
 
 

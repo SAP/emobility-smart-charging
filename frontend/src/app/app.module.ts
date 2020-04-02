@@ -21,6 +21,7 @@ import {MatSelectModule} from '@angular/material/select'
 import { NgxJsonViewModule } from 'ng-json-view';
 import { RequestJsonComponentComponent } from './request-json-component/request-json-component.component';
 import { ChartsModule } from 'ng2-charts';
+import { FuseTreeCircuitDiagramComponent, FuseCircuitDiagram } from './fuse-tree-circuit-diagram/fuse-tree-circuit-diagram.component';
 
 @NgModule({
     declarations: [
@@ -29,7 +30,9 @@ import { ChartsModule } from 'ng2-charts';
         ResultJsonComponentComponent,
         RequestJsonComponentComponent,
         EditFuseTreeComponentDialog,
-        EditCarDialog
+        EditCarDialog,
+        FuseTreeCircuitDiagramComponent,
+        FuseCircuitDiagram
     ],
     imports: [
         CommonModule, 
