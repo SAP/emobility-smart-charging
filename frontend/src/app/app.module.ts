@@ -7,6 +7,7 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatButtonModule } from '@angular/material/button';
+import {MatRadioModule} from '@angular/material/radio';
 import { MatCheckboxModule } from "@angular/material/checkbox"; 
 import { FuseTreeComponentComponent, EditFuseTreeComponentDialog, EditCarDialog } from './fuse-tree-component/fuse-tree-component.component';
 import { MatIconModule } from "@angular/material"; 
@@ -42,6 +43,7 @@ import { FuseTreeCircuitDiagramDialog } from './fuse-tree-circuit-diagram/fuse-t
         AppRoutingModule,
         BrowserAnimationsModule,
         MatDialogModule, 
+        MatRadioModule,
         ChartsModule, 
         MatExpansionModule,
         MatSelectModule,

@@ -4,6 +4,7 @@ import { AppComponent } from '../app.component';
 import { Utils } from '../utils/Utils';
 
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { phaseMatchingType } from 'src/global';
 
 @Component({
     selector: 'app-fuse-tree-component',
@@ -63,7 +64,10 @@ export class FuseTreeComponentComponent implements OnInit {
     onClickEditFuseTreeNode(fuseTreeNode: FuseTreeNode): void {
         const dialogRef = this.editFuseTreeComponentDialog.open(EditFuseTreeComponentDialog, {
             width: "75%",
-            data: fuseTreeNode
+            data: {
+                fuseTreeNode: fuseTreeNode,
+                appParent: this.appParent
+            } 
         });
 
         dialogRef.afterClosed().subscribe(result => {
@@ -73,7 +77,10 @@ export class FuseTreeComponentComponent implements OnInit {
     onClickEditCar(car: Car): void {
         const dialogRef = this.editCarDialog.open(EditCarDialog, {
             width: "75%",
-            data: car
+            data: {
+                car: car,
+                appParent: this.appParent 
+            }
         });
 
         dialogRef.afterClosed().subscribe(result => {
@@ -89,18 +96,50 @@ export class FuseTreeComponentComponent implements OnInit {
 })
 export class EditFuseTreeComponentDialog {
 
+    phaseMatchings: Array<{label: string, value: phaseMatchingType}> = [{
+        label: "Phase 1 ⟷ Phase 1;Phase 2 ⟷ Phase 2; Phase 3 ⟷ Phase 3",
+        value: {
+            PHASE_1: "PHASE_1",
+            PHASE_2: "PHASE_2",
+            PHASE_3: "PHASE_3"
+        }
+    }, {
+        label: "Phase 1 ⟷ Phase 2;Phase 2 ⟷ Phase 3;Phase 3 ⟷ Phase 1",
+        value: {
+            PHASE_1: "PHASE_2",
+            PHASE_2: "PHASE_3",
+            PHASE_3: "PHASE_1"
+        }
+    }, {
+        label: "Phase 1 ⟷ Phase 3;Phase 2 ⟷ Phase 1;Phase 3 ⟷ Phase 2",
+        value: {
+            PHASE_1: "PHASE_3",
+            PHASE_2: "PHASE_1",
+            PHASE_3: "PHASE_2"
+        }
+    }];
+
     constructor(
         public dialogRef: MatDialogRef<EditFuseTreeComponentDialog>,
-        @Inject(MAT_DIALOG_DATA) public data: FuseTreeNode) { }
+        @Inject(MAT_DIALOG_DATA) public data: {
+            fuseTreeNode: FuseTreeNode,
+            appParent: AppComponent
+        }) { }
 
     onChangeFuse() {
-        this.data["fusePhase2"] = this.data["fusePhase1"];
-        this.data["fusePhase3"] = this.data["fusePhase1"];
+        this.data.fuseTreeNode["fusePhase2"] = this.data.fuseTreeNode["fusePhase1"];
+        this.data.fuseTreeNode["fusePhase3"] = this.data.fuseTreeNode["fusePhase1"];
     }
 
     getPowerW() {
-        return Utils.getFusePowerLimitW(this.data);
+        return Utils.getFusePowerLimitW(this.data.fuseTreeNode);
     }
+
+
+    onChangeChargingStationPhaseAssignment() {
+        console.log(event); 
+    }
+
 
     onClickClose(): void {
         this.dialogRef.close();
@@ -119,27 +158,30 @@ export class EditCarDialog {
 
     constructor(
         public dialogRef: MatDialogRef<EditCarDialog>,
-        @Inject(MAT_DIALOG_DATA) public data: Car) { }
+        @Inject(MAT_DIALOG_DATA) public data: {
+            car: Car,
+            appParent: AppComponent
+        }) { }
 
     getEVPowerW() {
-        return this.data.maxCurrent*230; 
+        return this.data.car.maxCurrent*230; 
     }
 
     getSoC() {
-        return this.data.startCapacity / this.data.maxCapacity; 
+        return this.data.car.startCapacity / this.data.car.maxCapacity; 
     }
 
     getMinSoC() {
-        return this.data.minLoadingState / this.data.maxCapacity; 
+        return this.data.car.minLoadingState / this.data.car.maxCapacity; 
     }
     
     getSumUsedPhases() {
-        return this.data.canLoadPhase1+this.data.canLoadPhase2+this.data.canLoadPhase3; 
+        return this.data.car.canLoadPhase1+this.data.car.canLoadPhase2+this.data.car.canLoadPhase3; 
     }
 
     refreshPhases() {
-        this.data.minCurrent = this.data.minCurrentPerPhase * this.getSumUsedPhases(); 
-        this.data.maxCurrent = this.data.maxCurrentPerPhase * this.getSumUsedPhases(); 
+        this.data.car.minCurrent = this.data.car.minCurrentPerPhase * this.getSumUsedPhases(); 
+        this.data.car.maxCurrent = this.data.car.maxCurrentPerPhase * this.getSumUsedPhases(); 
     }
     
 

@@ -8,7 +8,8 @@
 
     <!-- https://stackoverflow.com/questions/45846147/angular-2-how-to-have-an-svg-in-app-component-and-a-circle-as-a-child-comp -->
     <!-- Needs to be a group (g) element because otherwise angular will  surround svg elements with <app-fuse-circuit-diagram> -->
-    <svg:g fuse-circuit-diagram [fuseTreeNode]="state.fuseTree.rootFuse" [fuseTreeNodeParent]="null" [fuseTreeCircuitDiagram]="this" [appParent]="appParent"
+    <svg:g fuse-circuit-diagram [fuseTreeNode]="fuseTreeNode" [fuseTreeNodeParent]="null" [fuseTreeCircuitDiagram]="this" [appParent]="appParent"
+    [phaseMatching]="phaseMatching"
     [rowIndex]="0" [columnIndex]="0" 
     />
 

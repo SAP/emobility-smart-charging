@@ -1,4 +1,4 @@
-import { OptimizeChargingProfilesRequest, Car, OptimizeChargingProfilesResponse } from "./assets/server_types";
+import { OptimizeChargingProfilesRequest, Car, OptimizeChargingProfilesResponse, Phase } from "./assets/server_types";
 import { ChartDataSets, ChartType, ChartOptions } from "chart.js";
 import { Label, Color } from "ng2-charts";
 
@@ -27,8 +27,8 @@ declare type restApiResponseType = {
     error: restApiResponseErrorType
 }
 
-
-
+// not explicitly exported by server classes
+declare type phaseMatchingType = { PHASE_1: Phase, PHASE_2: Phase, PHASE_3: Phase }; 
 
 
 
@@ -72,6 +72,8 @@ declare type chartIndividualChargePlanType = {
 declare type circuitDiagramSettingsType = {
     marginLeft: number,
     marginTop: number,
+    marginBottom: number, 
+    
     rowHeight: number,
     rowBuffer: number, 
     columnWidth: number,
@@ -82,6 +84,9 @@ declare type circuitDiagramSettingsType = {
         lengthWithoutPhases: number,
         horizontalX2Offset: number
     },
+    connectorPoint: {
+        radius: number
+    }; 
 
     // The fuse rectangle itself
     fuse: {

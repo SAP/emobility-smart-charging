@@ -1,8 +1,8 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { StateStore, FuseTreeNode, Car } from 'src/assets/server_types';
+import { StateStore, FuseTreeNode, Car, ChargingStation, Phase } from 'src/assets/server_types';
 import { AppComponent } from '../app.component';
 import { Utils } from '../utils/Utils';
-import { circuitDiagramSettingsType } from 'src/global';
+import { circuitDiagramSettingsType, phaseMatchingType } from 'src/global';
 
 @Component({
     selector: 'app-fuse-tree-circuit-diagram',
@@ -11,15 +11,18 @@ import { circuitDiagramSettingsType } from 'src/global';
 })
 export class FuseTreeCircuitDiagramComponent implements OnInit {
 
-    @Input() state: StateStore
+    @Input() fuseTreeNode: FuseTreeNode; 
     @Input() appParent: AppComponent;
+    @Input() phaseMatching: phaseMatchingType; // Can be null if visualizing complete circuit diagram. Used for single charging station edit dialog
 
     currentRowIndex: number = 0; 
 
     circuitDiagram: circuitDiagramSettingsType = {
         marginLeft: 50,
-        marginTop: 50,
-        rowHeight: 40+2*30+2*20 + 80, // Row Height = fuseHeight + 2*cable.lengthWithoutPhases + 3*cable.phaseMargin + buffer offset
+        marginTop: -1, // marginTop must be at least lengthWithoutPhases + 2*phaseMargin + radius of connector points
+        marginBottom: -1, // marginBottom must be at least 2*chargeStation.height + lengthWithoutPhases + 
+
+        rowHeight: -1, // Row Height = fuseHeight + 2*cable.lengthWithoutPhases + 3*cable.phaseMargin + buffer offset
         rowBuffer: 80, // Buffer between rows
         columnWidth: 190, // Column width = fuseWidth + buffer offset
         
@@ -28,6 +31,9 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
             phaseMargin: 20,
             lengthWithoutPhases: 30,
             horizontalX2Offset: 10
+        },
+        connectorPoint: {
+            radius: 2
         },
 
         // The fuse rectangle itself
@@ -41,7 +47,6 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
             width: 170, 
             height: 40
         }
-
     }
 
 
@@ -49,7 +54,16 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
      * Generate SVG based on state:
      * Fuse tree and assigned cars
      */
-    constructor() { }
+    constructor() { 
+        const c = this.circuitDiagram; 
+        this.circuitDiagram.marginTop = c.cable.lengthWithoutPhases + 2*c.cable.phaseMargin + c.connectorPoint.radius; 
+        //this.circuitDiagram.marginBottom = 2*c.chargeStation.height + c.cable.lengthWithoutPhases; 
+        this.circuitDiagram.marginBottom = 0; 
+
+        this.circuitDiagram.rowHeight = c.fuse.height + 2*c.cable.lengthWithoutPhases + 2*c.cable.phaseMargin + c.rowBuffer; 
+        console.log("Using circuit diagram settings: "); 
+        console.log(this.circuitDiagram); 
+    }
 
     ngOnInit(): void {
     }
@@ -57,11 +71,20 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
 
     /**
      * Without any scaling, what is maximum height that we want? 
-     * maximumRowIndex * rowHeight + marginTop * 2
+     * maximumRowIndex * rowHeight + marginTop + marginBottom
      */
     getMaximumSVGHeight(): number {
-        const maximumRowIndex = this.getMaximumRowIndex(this.state.fuseTree.rootFuse, 0); 
-        const result = (maximumRowIndex+1) * this.circuitDiagram.rowHeight + this.circuitDiagram.marginTop*2;  
+        if (this.fuseTreeNode["@type"] === "ChargingStation") {
+            // If we are showing a single charging station, no need to show a whole row
+            const result = this.circuitDiagram.marginTop + // Includes cable leading to station
+                this.circuitDiagram.chargeStation.height*2 + // rect for charge station and car
+                this.circuitDiagram.cable.lengthWithoutPhases; // between station and car 
+            console.log("Init circuit diagram for a charging station with result height=" + result);
+            return result;  
+        }   
+
+        const maximumRowIndex = this.getMaximumRowIndex(this.fuseTreeNode, 0); 
+        const result = (maximumRowIndex+1) * this.circuitDiagram.rowHeight + this.circuitDiagram.marginTop + this.circuitDiagram.marginBottom;  
         console.log("Init circuit diagram with maximumRowIndex=" + maximumRowIndex + ", each row=" + this.circuitDiagram.rowHeight  + ". result height=" + result); 
         return result; 
     }
@@ -71,7 +94,7 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
      * maximumColumnIndex * columnWidth + marginLeft * 2
      */
     getMaximumSVGWidth(): number {
-        const maximumColumnIndex = this.getMaximumColumnIndex(this.state.fuseTree.rootFuse, 0); 
+        const maximumColumnIndex = this.getMaximumColumnIndex(this.fuseTreeNode, 0); 
         const result = (maximumColumnIndex+1) * this.circuitDiagram.columnWidth + this.circuitDiagram.marginLeft*2; 
         console.log("Init circuit diagram with maximumColumnIndex=" + maximumColumnIndex + ", each column=" + this.circuitDiagram.columnWidth  + ". result width=" + result); 
         return result; 
@@ -145,11 +168,11 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
         // Find the siblings that follow this fuseTreeNode
         let foundInChildrenArray: boolean = false; 
         for (const sibling of fuseTreeNodeParent.children) {
-            if (foundInChildrenArray) {
+            if (foundInChildrenArray === true) {
                 followingSiblings.push(sibling); 
             }
             
-            if (sibling.id === fuseTreeNode.id) {
+            if (sibling.id === fuseTreeNode.id && sibling["@type"] === fuseTreeNode["@type"]) {
                 foundInChildrenArray = true; 
             }   
         }
@@ -201,6 +224,12 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
 
 }
 
+
+/**
+ * Single component of the fuse circuit diagram
+ * Fuse (cables leading to and from)
+ * Charging station (cables leading to) + car
+ */
 @Component({
     selector: '[fuse-circuit-diagram]',
     templateUrl: 'fuse-circuit-diagram.html',
@@ -215,6 +244,8 @@ export class FuseCircuitDiagram {
     @Input() fuseTreeNode: FuseTreeNode;
     @Input() fuseTreeNodeParent: FuseTreeNode | null; // Parent is null for the root fuse
 
+    @Input() phaseMatching: phaseMatchingType; // Can be null if visualizing complete circuit diagram. Used for single charging station edit dialog
+
     // Which row is this node being drawn in
     @Input() rowIndex: number; 
     // Which column is this node being drawn in
@@ -222,6 +253,8 @@ export class FuseCircuitDiagram {
     
     ngOnInit(): void {
         this.settings = this.fuseTreeCircuitDiagram.circuitDiagram; 
+        console.log("using explicit phaseMatching="); 
+        console.log(this.phaseMatching); 
     }
 
     isRootFuse(): boolean {
@@ -229,6 +262,24 @@ export class FuseCircuitDiagram {
     }
     isChargingStation(): boolean {
         return this.fuseTreeNode["@type"] === "ChargingStation"; 
+    }
+    isExplicitPhaseMatching(): boolean {
+        return this.phaseMatching !== null && this.phaseMatching !== undefined; 
+    }
+    getPhaseMatching(): phaseMatchingType {
+        if (this.isExplicitPhaseMatching() === true) {
+            return this.phaseMatching; 
+        }
+        else {
+            return (this.fuseTreeNode as ChargingStation).phaseToGrid as phaseMatchingType; 
+        }
+    }
+    getCableLengthByPhase(phase: Phase): number {
+        switch (phase) {
+            case "PHASE_1": return 2*this.settings.cable.phaseMargin; 
+            case "PHASE_2": return 1*this.settings.cable.phaseMargin; 
+            case "PHASE_3": return 0*this.settings.cable.phaseMargin; 
+        }
     }
     
     getFuseTreeNodeTitleLabel(): string {
@@ -281,18 +332,28 @@ export class FuseCircuitDiagram {
 
     /**
      * Top of the line going to the node
+     * Left cable (phase 1 of charging station)
      */
     getLeftCableToNodeY1(): number {
         if (this.isRootFuse()) {
             return this.getNodeY() - this.settings.cable.lengthWithoutPhases;
         }
+        else if (this.isChargingStation()) {
+            return this.getNodeY() - this.settings.cable.lengthWithoutPhases - this.getCableLengthByPhase(this.getPhaseMatching().PHASE_1)
+        }
         else {
             return this.getNodeY() - this.settings.cable.lengthWithoutPhases - 2*this.settings.cable.phaseMargin; 
         }
     }
+    /**
+     * Middle cable (phase 2 of charging station)
+     */
     getMiddleCableToNodeY1(): number {
         if (this.isRootFuse()) {
             return this.getNodeY() - this.settings.cable.lengthWithoutPhases;
+        }
+        else if (this.isChargingStation()) {
+            return this.getNodeY() - this.settings.cable.lengthWithoutPhases - this.getCableLengthByPhase(this.getPhaseMatching().PHASE_2)
         }
         else {
             return this.getNodeY() - this.settings.cable.lengthWithoutPhases - 1*this.settings.cable.phaseMargin; 
@@ -301,6 +362,9 @@ export class FuseCircuitDiagram {
     getRightCableToNodeY1(): number {
         if (this.isRootFuse()) {
             return this.getNodeY() - this.settings.cable.lengthWithoutPhases;
+        }
+        else if (this.isChargingStation()) {
+            return this.getNodeY() - this.settings.cable.lengthWithoutPhases - this.getCableLengthByPhase(this.getPhaseMatching().PHASE_3)
         }
         else {
             return this.getNodeY() - this.settings.cable.lengthWithoutPhases - 0*this.settings.cable.phaseMargin; 

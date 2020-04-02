@@ -437,8 +437,19 @@ export class AppComponent {
             id: id,
             fusePhase1: 32,
             fusePhase2: 32,
-            fusePhase3: 32
-        }
+            fusePhase3: 32,
+            // Initial charge stations have no phase rotation
+            phaseToGrid: {
+                PHASE_1: "PHASE_1",
+                PHASE_2: "PHASE_2",
+                PHASE_3: "PHASE_3" 
+            },
+            phaseToChargingStation: {
+                PHASE_1: "PHASE_1", 
+                PHASE_2: "PHASE_2",
+                PHASE_3: "PHASE_3"
+            }
+        }; 
     }
 
     getTimeHours() {

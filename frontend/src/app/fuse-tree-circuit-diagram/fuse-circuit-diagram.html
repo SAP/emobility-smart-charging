@@ -15,13 +15,13 @@
 <!-- Connector points for each phase (not for root fuse) -->
 <svg:g *ngIf="isRootFuse()===false">
     <!-- Phase 1 -->
-    <svg:circle class="circleConnectorPoint" [attr.cx]="getLeftCableX()" [attr.cy]="getLeftCableToNodeY1()"  r="2"></svg:circle>
+    <svg:circle class="circleConnectorPoint" [attr.cx]="getLeftCableX()" [attr.cy]="getLeftCableToNodeY1()"  [attr.r]="settings.connectorPoint.radius"></svg:circle>
 
     <!-- Phase 2 -->
-    <svg:circle class="circleConnectorPoint" [attr.cx]="getNodeCenterX()" [attr.cy]="getMiddleCableToNodeY1()"  r="2"></svg:circle>
+    <svg:circle class="circleConnectorPoint" [attr.cx]="getNodeCenterX()" [attr.cy]="getMiddleCableToNodeY1()" [attr.r]="settings.connectorPoint.radius"></svg:circle>
 
     <!-- Phase 3 -->
-    <svg:circle class="circleConnectorPoint" [attr.cx]="getRightCableX()" [attr.cy]="getRightCableToNodeY1()"  r="2"></svg:circle>
+    <svg:circle class="circleConnectorPoint" [attr.cx]="getRightCableX()" [attr.cy]="getRightCableToNodeY1()" [attr.r]="settings.connectorPoint.radius"></svg:circle>
 </svg:g>
 
 

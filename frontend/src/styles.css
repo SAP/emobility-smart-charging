@@ -57,6 +57,15 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     width: 90%; 
 }
 
+.radioGroupPhaseAssignment {
+    display: flex;
+    flex-direction: column;
+    margin: 15px 0;
+}
+.radioButtonPhaseAssignment {
+    margin: 5px;
+}
+
 
 
 /***
