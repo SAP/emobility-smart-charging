@@ -1,0 +1,18 @@
+<h2 mat-dialog-title>Fuse tree circuit diagram</h2>
+
+
+<div mat-dialog-content style="max-height: 9999px">
+    <app-fuse-tree-circuit-diagram [fuseTreeNode]="data.state.fuseTree.rootFuse" [appParent]="data.appParent"></app-fuse-tree-circuit-diagram>
+</div>
+
+
+<div mat-dialog-actions>
+    <button mat-button mat-raised-button (click)="onClickClose()" class="floatLeft">
+        <mat-icon>check</mat-icon>
+        OK
+    </button>
+    <button mat-button mat-raised-button (click)="onClickSave()" class="floatRight">
+        <mat-icon>save_alt</mat-icon>
+        Save as SVG file
+    </button>
+</div>

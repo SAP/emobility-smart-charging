@@ -1,4 +1,4 @@
-<h2 mat-dialog-title>Editing Car (id={{data.id}})</h2>
+<h2 mat-dialog-title>Editing Car (id={{data.car.id}})</h2>
 
 
 <div mat-dialog-content>
@@ -9,28 +9,28 @@
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Start capacity (ampere hours)</mat-label>
                 <input name="inputStartCapacity" type="number" matInput placeholder="Start capacity"
-                    [(ngModel)]="data.startCapacity">
+                    [(ngModel)]="data.car.startCapacity">
             </mat-form-field>
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Minimum required capacity (ampere hours)</mat-label>
                 <input name="inputMinCapacity" type="number" matInput placeholder="Battery minimum capacity"
-                    [(ngModel)]="data.minLoadingState">
+                    [(ngModel)]="data.car.minLoadingState">
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Arrival time (seconds after midnight)</mat-label>
                 <input name="inputArrivalTime" type="number" matInput placeholder="Arrival time"
-                    [(ngModel)]="data.timestampArrival">
+                    [(ngModel)]="data.car.timestampArrival">
             </mat-form-field>
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Departure time (seconds after midnight, optional)</mat-label>
                 <input name="inputDepartureTime" type="number" matInput placeholder="Departure time"
-                    [(ngModel)]="data.timestampDeparture">
+                    [(ngModel)]="data.car.timestampDeparture">
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Car name (optional)</mat-label>
-                <input name="inputName" type="text" matInput placeholder="Car name" [(ngModel)]="data.name">
+                <input name="inputName" type="text" matInput placeholder="Car name" [(ngModel)]="data.car.name">
             </mat-form-field>
         </div>
 
@@ -38,7 +38,7 @@
             <h2>Car model data</h2>
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Car type</mat-label>
-                <mat-select [(value)]="data.carType">
+                <mat-select [(value)]="data.car.carType">
                     <mat-option value="BEV">Battery electric vehicle (BEV)</mat-option>
                     <mat-option value="PHEV">Plug-in hybrid electric vehicle (PHEV) </mat-option>
                 </mat-select>
@@ -46,31 +46,31 @@
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Battery maximum capacity (ampere hours)</mat-label>
                 <input name="inputMaxCapacity" type="number" matInput placeholder="Battery maximum capacity"
-                    [(ngModel)]="data.maxCapacity">
+                    [(ngModel)]="data.car.maxCapacity">
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Minimum current per phase (ampere)</mat-label>
                 <input name="inputMinCurrent" type="number" matInput placeholder="Minimum current per phase"
-                    [(ngModel)]="data.minCurrentPerPhase" (change)="refreshPhases()">
+                    [(ngModel)]="data.car.minCurrentPerPhase" (change)="refreshPhases()">
             </mat-form-field>
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Maximum current per phase (ampere)</mat-label>
                 <input name="inputMaxCurrent" type="number" matInput placeholder="Maximum current per phase"
-                    [(ngModel)]="data.maxCurrentPerPhase" (change)="refreshPhases()">
+                    [(ngModel)]="data.car.maxCurrentPerPhase" (change)="refreshPhases()">
             </mat-form-field>
 
             <mat-checkbox name="inputCanLoadPhase1" class="checkboxChartSetting" ngDefaultControl [disabled]="true"
-                (change)="refreshPhases()" [(ngModel)]="data.canLoadPhase1">Can load on phase 1</mat-checkbox>
+                (change)="refreshPhases()" [(ngModel)]="data.car.canLoadPhase1">Can charge on phase 1</mat-checkbox>
             <mat-checkbox name="inputCanLoadPhase2" class="checkboxChartSetting" ngDefaultControl
-                (change)="refreshPhases()" [(ngModel)]="data.canLoadPhase2">Can load on phase 2</mat-checkbox>
+                (change)="refreshPhases()" [(ngModel)]="data.car.canLoadPhase2">Can charge on phase 2</mat-checkbox>
             <mat-checkbox name="inputCanLoadPhase3" class="checkboxChartSetting" ngDefaultControl
-                (change)="refreshPhases()" [(ngModel)]="data.canLoadPhase3">Can load on phase 3</mat-checkbox>
+                (change)="refreshPhases()" [(ngModel)]="data.car.canLoadPhase3">Can charge on phase 3</mat-checkbox>
 
 
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Car model name (optional)</mat-label>
-                <input name="inputModelname" type="text" matInput placeholder="Model name" [(ngModel)]="data.name">
+                <input name="inputModelname" type="text" matInput placeholder="Model name" [(ngModel)]="data.car.name">
             </mat-form-field>
         </div>
 

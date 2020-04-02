@@ -38,17 +38,26 @@
                 </app-fuse-tree-component>
             </div>
 
-            <div class="floatLeft clearBoth">
+            <div class="floatRight">
                 <button (click)="onClickResetData()" mat-raised-button color="warn">
-                    <mat-icon>delete</mat-icon>Reset data
+                    <mat-icon>delete</mat-icon>
+                    Reset data
                 </button>
             </div>
-
-            <div class="floatLeft clearBoth">
-                <button (click)="onClickSendRequest()" mat-raised-button color="primary">Optimize charge plans (send request
-                        to server)</button>
+            <div class="floatLeft">
+                <button (click)="onClickShowFuseTreeCircuitDiagram()" mat-raised-button color="primary">
+                    <mat-icon>visibility</mat-icon>
+                    Show circuit diagram of fuse tree
+                </button>
             </div>
+           
 
+            <div class="floatLeft clearBoth" style="margin-top: 5px">
+                <button (click)="onClickSendRequest()" mat-raised-button color="primary">
+                    <mat-icon>build</mat-icon>
+                    Optimize charge plans (send request to server)
+                </button>
+            </div>
 
         </mat-expansion-panel>
 

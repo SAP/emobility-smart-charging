@@ -1,4 +1,5 @@
-<h2 mat-dialog-title>Editing {{data['@type']}} (id={{data.id}}<span *ngIf="data.id === 0 && data['@type']==='Fuse'">, root fuse</span>)</h2>
+<h2 mat-dialog-title>Editing {{data.fuseTreeNode['@type']}} (id={{data.fuseTreeNode.id}}<span *ngIf="data.fuseTreeNode.id === 0 && data.fuseTreeNode['@type']==='Fuse'">,
+        root fuse</span>)</h2>
 
 
 <div mat-dialog-content>
@@ -6,10 +7,31 @@
         <p>Power rating (kW): {{getPowerW() / 1000}}</p>
         <mat-form-field appearance="outline" class="inputEditDialog">
             <mat-label>Current limit per phase (ampere)</mat-label>
-            <input name="inputFuse" type="number" matInput placeholder="Ampere" [(ngModel)]="data['fusePhase1']" (change)="onChangeFuse()">
+            <input name="inputFuse" type="number" matInput placeholder="Ampere" [(ngModel)]="data.fuseTreeNode['fusePhase1']"
+                (change)="onChangeFuse()">
         </mat-form-field>
 
-        <div *ngIf="data['@type']==='ChargingStation'">
+        <div *ngIf="data.fuseTreeNode['@type']==='ChargingStation'">
+            <!-- Phase rotation -->
+            <label id="phaseAssignmentRadioGroupLabel">Phase assignment (Phase at charging station ⟷ phase at grid) </label>
+            <mat-radio-group aria-labelledby="phaseAssignmentRadioGroupLabel" class="radioGroupPhaseAssignment"
+                (change)="onChangeChargingStationPhaseAssignment()"
+                >
+                <mat-radio-button class="radioButtonPhaseAssignment" *ngFor="let phaseMatching of phaseMatchings" [value]="phaseMatching.value">
+                    <div>
+                        <div class="floatLeft" style="width: 45%">
+                            {{phaseMatching.label.split(";")[0]}}<br>
+                            {{phaseMatching.label.split(";")[1]}}<br>
+                            {{phaseMatching.label.split(";")[2]}}<br>
+                        </div>
+                        <div class="floatRight" style="width: 45%">
+                            <app-fuse-tree-circuit-diagram [phaseMatching]="phaseMatching.value" 
+                            [fuseTreeNode]="data.fuseTreeNode"
+                            [appParent]="data.appParent"></app-fuse-tree-circuit-diagram>
+                        </div>
+                    </div>
+                </mat-radio-button>
+            </mat-radio-group>
         </div>
     </form>
 </div>

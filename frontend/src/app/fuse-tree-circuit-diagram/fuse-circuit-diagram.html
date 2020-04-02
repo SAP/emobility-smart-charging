@@ -1,0 +1,116 @@
+<!-- vertical cables leading TO the node -->
+<!-- left cable -->
+<svg:line class="lineCable" [attr.x1]="getLeftCableX()" [attr.y1]="getLeftCableToNodeY1()"
+[attr.x2]="getLeftCableX()" [attr.y2]="getNodeY()"></svg:line>
+
+<!-- middle cable -->
+<svg:line class="lineCable" [attr.x1]="getNodeCenterX()" [attr.y1]="getMiddleCableToNodeY1()"
+[attr.x2]="getNodeCenterX()" [attr.y2]="getNodeY()"></svg:line>
+
+<!-- right cable -->
+<svg:line class="lineCable" [attr.x1]="getRightCableX()" [attr.y1]="getRightCableToNodeY1()"
+[attr.x2]="getRightCableX()" [attr.y2]="getNodeY()"></svg:line>
+
+
+<!-- Connector points for each phase (not for root fuse) -->
+<svg:g *ngIf="isRootFuse()===false">
+    <!-- Phase 1 -->
+    <svg:circle class="circleConnectorPoint" [attr.cx]="getLeftCableX()" [attr.cy]="getLeftCableToNodeY1()"  [attr.r]="settings.connectorPoint.radius"></svg:circle>
+
+    <!-- Phase 2 -->
+    <svg:circle class="circleConnectorPoint" [attr.cx]="getNodeCenterX()" [attr.cy]="getMiddleCableToNodeY1()" [attr.r]="settings.connectorPoint.radius"></svg:circle>
+
+    <!-- Phase 3 -->
+    <svg:circle class="circleConnectorPoint" [attr.cx]="getRightCableX()" [attr.cy]="getRightCableToNodeY1()" [attr.r]="settings.connectorPoint.radius"></svg:circle>
+</svg:g>
+
+
+
+<!-- fuse/charging station -->
+<svg:rect class="rectFuse" [attr.width]="getNodeWidth()"
+    [attr.height]="getNodeHeight()" [attr.x]="getNodeX()" [attr.y]="getNodeY()">
+</svg:rect>
+<svg:text class="textFuse" [attr.y]="getNodeCenterY()" >
+    <!-- Text with multiple lines requires tspan -->
+    <svg:tspan [attr.x]="getNodeCenterX()" dy="-6">{{getFuseTreeNodeTitleLabel()}}</svg:tspan>    
+    <svg:tspan [attr.x]="getNodeCenterX()" dy="14">{{getFuseTreeNodeValueLabel()}}</svg:tspan>    
+</svg:text>
+
+
+
+<!-- cables leading AWAY from the node -->
+<svg:g *ngIf="isChargingStation()===true || fuseTreeNode.children.length > 0">
+    <!-- Vertical cables -->
+    <!-- left cable (phase 1) -->
+    <svg:line class="lineCable" [attr.x1]="getLeftCableX()" [attr.y1]="getNodeBottomY()"
+    [attr.x2]="getLeftCableX()" [attr.y2]="getLeftCableFromNodeY2()"></svg:line>
+    
+    <!-- middle cable (phase 2) -->
+    <svg:line class="lineCable" [attr.x1]="getNodeCenterX()" [attr.y1]="getNodeBottomY()"
+    [attr.x2]="getNodeCenterX()" [attr.y2]="getMiddleCableFromNodeY2()"></svg:line>
+    
+    <!-- right cable (phase 3) -->
+    <svg:line class="lineCable" [attr.x1]="getRightCableX()" [attr.y1]="getNodeBottomY()"
+    [attr.x2]="getRightCableX()" [attr.y2]="getRightCableFromNodeY2()"></svg:line>
+
+
+    <!-- horizontal cables -->
+    <svg:g *ngIf="isChargingStation()===false">
+        <!-- top cable (phase 1) -->
+        <svg:line class="lineCable" [attr.x1]="getLeftCableX()" [attr.y1]="getLeftCableFromNodeY2()"
+        [attr.x2]="getRightCableX() + fuseTreeNode.children.length*settings.columnWidth + settings.cable.horizontalX2Offset" [attr.y2]="getLeftCableFromNodeY2()"></svg:line>
+
+        <!-- middle cable (phase 2) -->
+        <svg:line class="lineCable" [attr.x1]="getNodeCenterX()" [attr.y1]="getMiddleCableFromNodeY2()"
+        [attr.x2]="getRightCableX() + fuseTreeNode.children.length*settings.columnWidth + settings.cable.horizontalX2Offset" [attr.y2]="getMiddleCableFromNodeY2()"></svg:line>
+        
+          <!-- right cable (phase 3) -->
+        <svg:line class="lineCable" [attr.x1]="getRightCableX()" [attr.y1]="getRightCableFromNodeY2()"
+        [attr.x2]="getRightCableX() + fuseTreeNode.children.length*settings.columnWidth + settings.cable.horizontalX2Offset" [attr.y2]="getRightCableFromNodeY2()"></svg:line>
+
+
+    </svg:g>
+     
+
+</svg:g>
+
+<!-- Assigned car here (if charging station) -->
+<svg:g *ngIf="getAssignedCar() !== null"> 
+    <svg:rect class="rectFuse"
+    [attr.width]="getNodeWidth()" [attr.height]="getNodeHeight()"
+    [attr.x]="getNodeX()" [attr.y]="getNodeBottomY() + settings.cable.lengthWithoutPhases">
+   </svg:rect>
+   <svg:text class="textFuse" [attr.y]="getNodeCenterY() + settings.cable.lengthWithoutPhases + settings.fuse.height" >
+       <!-- Text with multiple lines requires tspan -->
+       <svg:tspan [attr.x]="getNodeCenterX()" dy="-6">{{getAssignedTitleLabel()}}</svg:tspan>    
+       <svg:tspan [attr.x]="getNodeCenterX()" dy="14">{{getAssignedValueLabel()}}</svg:tspan>    
+   </svg:text>
+</svg:g>
+
+
+
+
+<svg:g *ngIf="isChargingStation()===false" >
+
+    <!-- children here-->
+    <!-- Example: 
+    Fuse (current node, rowIndex=0)
+    ---- Fuse (rowIndex=1)
+         ---- Fuse (rowIndex=4)
+         ---- Fuse (rowIndex=4)
+         ---- ChargingStation (rowIndex=4)
+    ---- Fuse (rowIndex=1)
+         ---- Fuse (rowIndex=2)
+              ---- Fuse (rowIndex=3)
+              ---- ChargingStation (rowIndex=3)
+    -->
+    <svg:g  fuse-circuit-diagram
+    *ngFor="let fuseTreeNodeChild of fuseTreeNode.children; let childIndex = index"
+    [fuseTreeNode]="fuseTreeNodeChild" [fuseTreeCircuitDiagram]="fuseTreeCircuitDiagram" [appParent]="appParent"
+    [fuseTreeNodeParent]="this.fuseTreeNode"
+    [rowIndex]="rowIndex + 1 + getSumFollowingSiblingDepth()" 
+    [columnIndex]="columnIndex+1+childIndex"  >
+    </svg:g>
+
+</svg:g>
+
