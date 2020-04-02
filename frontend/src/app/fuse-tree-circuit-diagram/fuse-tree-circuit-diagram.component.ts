@@ -21,7 +21,7 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
         marginTop: 50,
         rowHeight: 40+2*30+2*20 + 80, // Row Height = fuseHeight + 2*cable.lengthWithoutPhases + 3*cable.phaseMargin + buffer offset
         rowBuffer: 80, // Buffer between rows
-        columnWidth: 170, // Column width = fuseWidth + buffer offset
+        columnWidth: 190, // Column width = fuseWidth + buffer offset
         
         // margin between cables
         cable: {
@@ -32,13 +32,13 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
 
         // The fuse rectangle itself
         fuse: {
-            width: 150,
+            width: 170,
             height: 40
         }, 
 
         // Charge stations
         chargeStation: {
-            width: 150, 
+            width: 170, 
             height: 40
         }
 

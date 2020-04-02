@@ -1,7 +1,7 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { websiteDataType, restApiResponseType, restApiResponseErrorType, chartChargePlansType, websiteSettingsType } from 'src/global';
 import { Car, ChargingStationStore, FuseTree, ChargingStation, Fuse, CarAssignmentStore, FuseTreeNode, FuseTreeNodeUnion, OptimizeChargingProfilesRequest, OptimizeChargingProfilesResponse } from 'src/assets/server_types';
-import { MatTable, MatTab, ErrorStateMatcher, MatSelect, MatSnackBar, MatInput } from "@angular/material";
+import { MatTable, MatTab, ErrorStateMatcher, MatSelect, MatSnackBar, MatInput, MatDialog } from "@angular/material";
 import * as ObservableSlim from "observable-slim";
 import { HttpClient } from '@angular/common/http';
 import { ChartDataSets, ChartOptions } from 'chart.js';
@@ -10,6 +10,7 @@ import { Label, Color } from 'ng2-charts';
 import * as ChartAnnotation from 'chartjs-plugin-annotation';
 import * as Chart from 'chart.js';
 import { ChartChargePlans } from './utils/ChartChargePlans';
+import { FuseTreeCircuitDiagramDialog } from './fuse-tree-circuit-diagram/fuse-tree-circuit-diagram-dialog';
 
 @Component({
     selector: 'app-root',
@@ -42,7 +43,8 @@ export class AppComponent {
 
 
     constructor(private _snackBar: MatSnackBar,
-        private httpClient: HttpClient) {
+        private httpClient: HttpClient,
+        public fuseTreeCircuitDiagramDialog: MatDialog) {
 
         let dataInLocalStorage = this.isPersistedInLocalStorage();
         if (dataInLocalStorage === true) {
@@ -63,9 +65,23 @@ export class AppComponent {
         let namedChartAnnotation = ChartAnnotation;
         namedChartAnnotation["id"] = "annotation";
         Chart.pluginService.register(namedChartAnnotation);
-    
+
     }
 
+    onClickShowFuseTreeCircuitDiagram(): void {
+        const dialogRef = this.fuseTreeCircuitDiagramDialog.open(FuseTreeCircuitDiagramDialog, {
+            width: "95%",
+            height: "95%",
+            data: {
+                state: this.data.request.state,
+                appParent: this
+            }
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+            console.log('The dialog was closed');
+        });
+    }
 
     onClickResetData(): void {
         this.data.request = this.getInitialRequest();
@@ -231,16 +247,16 @@ export class AppComponent {
 
     getMaximumFuseTreeNodeDepth(fuseTreeNode: FuseTreeNode, depth: number): number {
         // Charging station has no fuse children
-        if (fuseTreeNode.children === undefined || fuseTreeNode.children.length===0) return depth; 
+        if (fuseTreeNode.children === undefined || fuseTreeNode.children.length === 0) return depth;
 
         let maxDepth = 0;
         for (const child of fuseTreeNode.children) {
-            const childDepth = this.getMaximumFuseTreeNodeDepth(child, depth+1); 
+            const childDepth = this.getMaximumFuseTreeNodeDepth(child, depth + 1);
             if (childDepth > maxDepth) {
-                maxDepth = childDepth; 
+                maxDepth = childDepth;
             }
-        } 
-        return maxDepth; 
+        }
+        return maxDepth;
     }
 
     addFuseChild(fuse: Fuse) {

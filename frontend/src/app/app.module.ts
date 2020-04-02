@@ -22,6 +22,7 @@ import { NgxJsonViewModule } from 'ng-json-view';
 import { RequestJsonComponentComponent } from './request-json-component/request-json-component.component';
 import { ChartsModule } from 'ng2-charts';
 import { FuseTreeCircuitDiagramComponent, FuseCircuitDiagram } from './fuse-tree-circuit-diagram/fuse-tree-circuit-diagram.component';
+import { FuseTreeCircuitDiagramDialog } from './fuse-tree-circuit-diagram/fuse-tree-circuit-diagram-dialog';
 
 @NgModule({
     declarations: [
@@ -32,6 +33,7 @@ import { FuseTreeCircuitDiagramComponent, FuseCircuitDiagram } from './fuse-tree
         EditFuseTreeComponentDialog,
         EditCarDialog,
         FuseTreeCircuitDiagramComponent,
+        FuseTreeCircuitDiagramDialog, 
         FuseCircuitDiagram
     ],
     imports: [
