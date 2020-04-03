@@ -61,3 +61,4 @@ import 'zone.js/dist/zone';  // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+(window as any).global = window; // For panzoom https://stackoverflow.com/questions/57586472/ionic-4-angular-8-uncaught-referenceerror-global-is-not-defined

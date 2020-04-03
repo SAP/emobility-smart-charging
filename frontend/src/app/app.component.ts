@@ -200,13 +200,15 @@ export class AppComponent {
 
     deleteFuseTreeNode(fuseTreeNodeParam: FuseTreeNode) {
         console.log("Deleting " + fuseTreeNodeParam["@type"] + " (id=" + fuseTreeNodeParam.id + ") from tree...");
+        // First delete all cars under this fuseTreeNode
+        // First delete all EVs, charging stations and carAssignments that are children of this fuseTreeNode
+        this.deleteAssignedCarsUnderFuseTreeNode(fuseTreeNodeParam);
+
+
         // Traverse tree until found
         // fuseTreeNodeParam can be charging station or fuse
         this.traverseFuses(this.data.request.state.fuseTree.rootFuse, function (fuse: FuseTreeNode) {
             if (fuse.children.indexOf(fuseTreeNodeParam as FuseTreeNodeUnion) !== -1) {
-
-                // Also delete all EVs, charging stations and carAssignments that are children of this fuseTreeNode
-                this.deleteAssignedCars(fuseTreeNodeParam);
 
                 fuse.children.splice(fuse.children.indexOf(fuseTreeNodeParam as FuseTreeNodeUnion), 1);
 
@@ -215,10 +217,9 @@ export class AppComponent {
         });
     }
 
-    deleteAssignedCars(fuseTreeNodeParam: FuseTreeNode): void {
+    deleteAssignedCarsUnderFuseTreeNode(fuseTreeNodeParam: FuseTreeNode): void {
         console.log("Deleting all assigned cars under " + fuseTreeNodeParam["@type"] + " (id=" + fuseTreeNodeParam.id + ")");
         this.traverseFuses(fuseTreeNodeParam, function (fuseTreeNode: FuseTreeNode) {
-
             for (let child of fuseTreeNode.children) {
                 console.log("Checking " + child["@type"] + " id=" + child.id + " for cars...");
                 if (child["@type"] === "ChargingStation") {
@@ -227,7 +228,6 @@ export class AppComponent {
                     }
                 }
             }
-
         });
     }
 
@@ -290,8 +290,8 @@ export class AppComponent {
         });
     }
     deleteCar(chargingStation: ChargingStation): void {
-        let carAssignment = this.getCarAssignment(chargingStation.id);
-        let car = this.getCar(carAssignment.carID);
+        const carAssignment = this.getCarAssignment(chargingStation.id);
+        const car = this.getCar(carAssignment.carID);
         console.log("Deleting car with id=" + car.id + " and car assignment");
         this.getCars().splice(this.getCars().indexOf(car), 1);
         this.getCarAssignments().splice(this.getCarAssignments().indexOf(carAssignment), 1);

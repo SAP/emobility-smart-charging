@@ -3,6 +3,7 @@ import { StateStore, FuseTreeNode, Car, ChargingStation, Phase } from 'src/asset
 import { AppComponent } from '../app.component';
 import { Utils } from '../utils/Utils';
 import { circuitDiagramSettingsType, phaseMatchingType } from 'src/global';
+import * as panzoom from "panzoom"; 
 
 @Component({
     selector: 'app-fuse-tree-circuit-diagram',
@@ -14,8 +15,6 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
     @Input() fuseTreeNode: FuseTreeNode; 
     @Input() appParent: AppComponent;
     @Input() phaseMatching: phaseMatchingType; // Can be null if visualizing complete circuit diagram. Used for single charging station edit dialog
-
-    currentRowIndex: number = 0; 
 
     circuitDiagram: circuitDiagramSettingsType = {
         marginLeft: 50,
@@ -46,6 +45,14 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
         chargeStation: {
             width: 170, 
             height: 40
+        },
+
+        // Legend (top right)
+        legend: {
+            width: 100,
+            padding: 5,
+            marginTop: 5,
+            marginRight: 5
         }
     }
 
@@ -66,6 +73,9 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        if (this.isExplicitPhaseMatching() === false) {
+            this.setSVGPanAndZoom(); 
+        }
     }
 
 
@@ -79,13 +89,13 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
             const result = this.circuitDiagram.marginTop + // Includes cable leading to station
                 this.circuitDiagram.chargeStation.height*2 + // rect for charge station and car
                 this.circuitDiagram.cable.lengthWithoutPhases; // between station and car 
-            console.log("Init circuit diagram for a charging station with result height=" + result);
+            //console.log("Init circuit diagram for a charging station with result height=" + result);
             return result;  
         }   
 
         const maximumRowIndex = this.getMaximumRowIndex(this.fuseTreeNode, 0); 
         const result = (maximumRowIndex+1) * this.circuitDiagram.rowHeight + this.circuitDiagram.marginTop + this.circuitDiagram.marginBottom;  
-        console.log("Init circuit diagram with maximumRowIndex=" + maximumRowIndex + ", each row=" + this.circuitDiagram.rowHeight  + ". result height=" + result); 
+        //console.log("Init circuit diagram with maximumRowIndex=" + maximumRowIndex + ", each row=" + this.circuitDiagram.rowHeight  + ". result height=" + result); 
         return result; 
     }
 
@@ -96,7 +106,7 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
     getMaximumSVGWidth(): number {
         const maximumColumnIndex = this.getMaximumColumnIndex(this.fuseTreeNode, 0); 
         const result = (maximumColumnIndex+1) * this.circuitDiagram.columnWidth + this.circuitDiagram.marginLeft*2; 
-        console.log("Init circuit diagram with maximumColumnIndex=" + maximumColumnIndex + ", each column=" + this.circuitDiagram.columnWidth  + ". result width=" + result); 
+        //console.log("Init circuit diagram with maximumColumnIndex=" + maximumColumnIndex + ", each column=" + this.circuitDiagram.columnWidth  + ". result width=" + result); 
         return result; 
     }
 
@@ -189,38 +199,73 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
     }
 
 
+    getSVGElement(): Element {
+        return document.getElementsByClassName("svgCircuitDiagram")[0];
+    }
+
+    getScaledSVG(): { width: number, height: number } {
+        const svgCircuitDiagram = this.getSVGElement();
+        const maxSVGWidth = this.getMaximumSVGWidth(); 
+        const maxSVGHeight = this.getMaximumSVGHeight(); 
+        
+        const svgAspectRatio = maxSVGWidth / maxSVGHeight; 
+        // ratio > 1 ==> svg is wider than tall
+
+        const parentElement = svgCircuitDiagram.parentElement.parentElement; // parentElement is <app-fuse-tree-circuit-diagram>, parent of that is <div>
+        const computedStyle = getComputedStyle(parentElement);
+
+        const maxElementWidth = parentElement.clientWidth - parseFloat(computedStyle.paddingLeft) - parseFloat(computedStyle.paddingRight);  
+        const maxElementHeight =  parentElement.clientHeight;  // 0.75*window.innerHeight; // If viewing complete circuit diagram: use 0.75 
+    
+        const elementAspectRatio = maxElementWidth / maxElementHeight; 
+        // ratio > 1 ==> element can be wider than it is tall 
+
+        if (svgAspectRatio > elementAspectRatio) {
+            // SVG has higher width:height ratio than element ==> restrict height
+            console.log("here with ratio=" + svgAspectRatio + ", elementRatio=" + elementAspectRatio + ". Restricting height"); 
+            return {
+                width: maxElementWidth, 
+                height: Math.ceil(svgAspectRatio * maxElementWidth)
+            }; 
+        }
+        else {
+            // SVG has lower ratio than element ==> restrict width
+            console.log("here with ratio=" + svgAspectRatio + ", elementRatio=" + elementAspectRatio + ". Restricting width"); 
+            return {
+                width: Math.ceil(maxElementHeight / svgAspectRatio),
+                height: maxElementHeight
+            }; 
+        }
+    }
+
+    getScaledSVGWidth(): number {
+        return this.getScaledSVG().width; 
+    }
+
     /**
      * Get tree depth: What is the deepest we need to go? 
      */
     getScaledSVGHeight(): number {
-        const svgCircuitDiagram = document.getElementsByClassName("svgCircuitDiagram");
-        const maxHeight = this.getMaximumSVGHeight(); 
-        const maxWidth = this.getMaximumSVGWidth(); 
-        if (svgCircuitDiagram.length === 0) {
-            return maxHeight;
-        }
-
-        const width = svgCircuitDiagram[0].clientWidth;
-        if (width > maxWidth) {
-            // If element is wide enough, return constant height for svg
-            return maxHeight;
-        }
-        else {
-            // If element is not wide enough, slowly scale down height for svg
-            const widthPercent = width / maxWidth;
-            return Math.ceil(widthPercent * maxHeight);
-        }
+        return this.getScaledSVG().height; 
     }
 
-    /**
-     * For each generation of children, increment the row index once (so that all children are on the same row)
-     */
-    incrementCurrentRowIndex(): void {
-        this.currentRowIndex++; 
+    getLegendX(): number {
+        return this.getMaximumSVGWidth() - this.circuitDiagram.legend.width - this.circuitDiagram.legend.marginRight; 
     }
-    getCurrentRowIndex(): number {
-        return this.currentRowIndex; 
+
+    isExplicitPhaseMatching(): boolean {
+        return this.phaseMatching !== null && this.phaseMatching !== undefined; 
     }
+
+    setSVGPanAndZoom(): void {
+        // panzoom wants first <g> element, not the root element
+        const groupInSVG = document.querySelector(".svgCircuitDiagram > .groupFuseCircuitDiagram"); 
+        console.log("Activating pan and zoom on element:");
+        console.log(groupInSVG);  
+        panzoom.default(groupInSVG as SVGElement);  
+    }
+
+
 
 }
 
@@ -253,8 +298,8 @@ export class FuseCircuitDiagram {
     
     ngOnInit(): void {
         this.settings = this.fuseTreeCircuitDiagram.circuitDiagram; 
-        console.log("using explicit phaseMatching="); 
-        console.log(this.phaseMatching); 
+        //console.log("using explicit phaseMatching="); 
+        //console.log(this.phaseMatching); 
     }
 
     isRootFuse(): boolean {
@@ -264,7 +309,7 @@ export class FuseCircuitDiagram {
         return this.fuseTreeNode["@type"] === "ChargingStation"; 
     }
     isExplicitPhaseMatching(): boolean {
-        return this.phaseMatching !== null && this.phaseMatching !== undefined; 
+        return this.fuseTreeCircuitDiagram.isExplicitPhaseMatching(); 
     }
     getPhaseMatching(): phaseMatchingType {
         if (this.isExplicitPhaseMatching() === true) {
@@ -328,6 +373,31 @@ export class FuseCircuitDiagram {
     }
     getRightCableX(): number {
         return this.getNodeCenterX() + this.settings.cable.phaseMargin;
+    }
+
+    getLeftCablePhase(): Phase {
+        if (this.isChargingStation() === false) {
+            return "PHASE_1"; 
+        }
+        else {
+            return this.getPhaseMatching().PHASE_1; 
+        }
+    }
+    getMiddleCablePhase(): Phase {
+        if (this.isChargingStation() === false) {
+            return "PHASE_2"; 
+        }
+        else {
+            return this.getPhaseMatching().PHASE_2; 
+        }
+    }
+    getRightCablePhase(): Phase {
+        if (this.isChargingStation() === false) {
+            return "PHASE_3"; 
+        }
+        else {
+            return this.getPhaseMatching().PHASE_3; 
+        }
     }
 
     /**

@@ -33,6 +33,14 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     color: red; 
 }
 
+.centerVertically {
+    position: relative;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+}
+
 
 
 
@@ -57,12 +65,12 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
     width: 90%; 
 }
 
-.radioGroupPhaseAssignment {
+.radioGroupPhaseMatching {
     display: flex;
     flex-direction: column;
     margin: 15px 0;
 }
-.radioButtonPhaseAssignment {
+.radioButtonPhaseMatching {
     margin: 5px;
 }
 
@@ -73,16 +81,34 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
  ***/
 
 .svgCircuitDiagram {
-    
+    margin: 0 auto; 
+    display: block; 
 }
 
 .lineCable {
     stroke: black; 
 }
+.lineCablePHASE_1 {
+    stroke: brown; 
+}
+.lineCablePHASE_2 {
+    stroke: black; 
+}
+.lineCablePHASE_3 {
+    stroke: gray; 
+}
 
-.circleConnectorPoint {
+.circleConnectorPointPHASE_1 {
+    stroke: brown; 
+    fill: brown; 
+}
+.circleConnectorPointPHASE_2 {
     stroke: black; 
     fill: black; 
+}
+.circleConnectorPointPHASE_3 {
+    stroke: gray; 
+    fill: gray; 
 }
 
 .rectFuse {
@@ -93,4 +119,7 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .textFuse {
     text-anchor: middle; 
     dominant-baseline: middle; /* centers on y axis */
+}
+.textPhase {
+    text-anchor: start;
 }

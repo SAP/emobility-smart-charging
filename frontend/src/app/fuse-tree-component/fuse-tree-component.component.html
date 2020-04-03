@@ -27,7 +27,7 @@
         </div>
 
         <div class="divCarContainer floatLeft clearBoth icon-text blueBorderLeft"
-            *ngIf="fuseTreeNode['@type']=='ChargingStation' && getAssignedCar() !== null">
+            *ngIf="fuseTreeNode['@type']==='ChargingStation' && getAssignedCar() !== null">
             <mat-icon>directions_car</mat-icon>
             <span>
                 Car (id={{getAssignedCar().id}}
