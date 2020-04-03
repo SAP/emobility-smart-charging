@@ -1,27 +1,27 @@
 <!-- vertical cables leading TO the node -->
 <!-- left cable -->
-<svg:line class="lineCable" [attr.x1]="getLeftCableX()" [attr.y1]="getLeftCableToNodeY1()"
+<svg:line [ngClass]="'lineCable' + getLeftCablePhase()" [attr.x1]="getLeftCableX()" [attr.y1]="getLeftCableToNodeY1()"
 [attr.x2]="getLeftCableX()" [attr.y2]="getNodeY()"></svg:line>
 
 <!-- middle cable -->
-<svg:line class="lineCable" [attr.x1]="getNodeCenterX()" [attr.y1]="getMiddleCableToNodeY1()"
+<svg:line [ngClass]="'lineCable' + getMiddleCablePhase()" [attr.x1]="getNodeCenterX()" [attr.y1]="getMiddleCableToNodeY1()"
 [attr.x2]="getNodeCenterX()" [attr.y2]="getNodeY()"></svg:line>
 
 <!-- right cable -->
-<svg:line class="lineCable" [attr.x1]="getRightCableX()" [attr.y1]="getRightCableToNodeY1()"
+<svg:line [ngClass]="'lineCable' + getRightCablePhase()" [attr.x1]="getRightCableX()" [attr.y1]="getRightCableToNodeY1()"
 [attr.x2]="getRightCableX()" [attr.y2]="getNodeY()"></svg:line>
 
 
 <!-- Connector points for each phase (not for root fuse) -->
 <svg:g *ngIf="isRootFuse()===false">
     <!-- Phase 1 -->
-    <svg:circle class="circleConnectorPoint" [attr.cx]="getLeftCableX()" [attr.cy]="getLeftCableToNodeY1()"  [attr.r]="settings.connectorPoint.radius"></svg:circle>
+    <svg:circle [ngClass]="'circleConnectorPoint' + getLeftCablePhase()" [attr.cx]="getLeftCableX()" [attr.cy]="getLeftCableToNodeY1()"  [attr.r]="settings.connectorPoint.radius"></svg:circle>
 
     <!-- Phase 2 -->
-    <svg:circle class="circleConnectorPoint" [attr.cx]="getNodeCenterX()" [attr.cy]="getMiddleCableToNodeY1()" [attr.r]="settings.connectorPoint.radius"></svg:circle>
+    <svg:circle [ngClass]="'circleConnectorPoint' + getMiddleCablePhase()" [attr.cx]="getNodeCenterX()" [attr.cy]="getMiddleCableToNodeY1()" [attr.r]="settings.connectorPoint.radius"></svg:circle>
 
     <!-- Phase 3 -->
-    <svg:circle class="circleConnectorPoint" [attr.cx]="getRightCableX()" [attr.cy]="getRightCableToNodeY1()" [attr.r]="settings.connectorPoint.radius"></svg:circle>
+    <svg:circle [ngClass]="'circleConnectorPoint' + getRightCablePhase()" [attr.cx]="getRightCableX()" [attr.cy]="getRightCableToNodeY1()" [attr.r]="settings.connectorPoint.radius"></svg:circle>
 </svg:g>
 
 
@@ -42,30 +42,30 @@
 <svg:g *ngIf="isChargingStation()===true || fuseTreeNode.children.length > 0">
     <!-- Vertical cables -->
     <!-- left cable (phase 1) -->
-    <svg:line class="lineCable" [attr.x1]="getLeftCableX()" [attr.y1]="getNodeBottomY()"
+    <svg:line [ngClass]="'lineCable' + getLeftCablePhase()" [attr.x1]="getLeftCableX()" [attr.y1]="getNodeBottomY()"
     [attr.x2]="getLeftCableX()" [attr.y2]="getLeftCableFromNodeY2()"></svg:line>
     
     <!-- middle cable (phase 2) -->
-    <svg:line class="lineCable" [attr.x1]="getNodeCenterX()" [attr.y1]="getNodeBottomY()"
+    <svg:line [ngClass]="'lineCable' + getMiddleCablePhase()" [attr.x1]="getNodeCenterX()" [attr.y1]="getNodeBottomY()"
     [attr.x2]="getNodeCenterX()" [attr.y2]="getMiddleCableFromNodeY2()"></svg:line>
     
     <!-- right cable (phase 3) -->
-    <svg:line class="lineCable" [attr.x1]="getRightCableX()" [attr.y1]="getNodeBottomY()"
+    <svg:line [ngClass]="'lineCable' + getRightCablePhase()" [attr.x1]="getRightCableX()" [attr.y1]="getNodeBottomY()"
     [attr.x2]="getRightCableX()" [attr.y2]="getRightCableFromNodeY2()"></svg:line>
 
 
     <!-- horizontal cables -->
     <svg:g *ngIf="isChargingStation()===false">
         <!-- top cable (phase 1) -->
-        <svg:line class="lineCable" [attr.x1]="getLeftCableX()" [attr.y1]="getLeftCableFromNodeY2()"
+        <svg:line class="lineCablePHASE_1" [attr.x1]="getLeftCableX()" [attr.y1]="getLeftCableFromNodeY2()"
         [attr.x2]="getRightCableX() + fuseTreeNode.children.length*settings.columnWidth + settings.cable.horizontalX2Offset" [attr.y2]="getLeftCableFromNodeY2()"></svg:line>
 
         <!-- middle cable (phase 2) -->
-        <svg:line class="lineCable" [attr.x1]="getNodeCenterX()" [attr.y1]="getMiddleCableFromNodeY2()"
+        <svg:line class="lineCablePHASE_2" [attr.x1]="getNodeCenterX()" [attr.y1]="getMiddleCableFromNodeY2()"
         [attr.x2]="getRightCableX() + fuseTreeNode.children.length*settings.columnWidth + settings.cable.horizontalX2Offset" [attr.y2]="getMiddleCableFromNodeY2()"></svg:line>
         
           <!-- right cable (phase 3) -->
-        <svg:line class="lineCable" [attr.x1]="getRightCableX()" [attr.y1]="getRightCableFromNodeY2()"
+        <svg:line class="lineCablePHASE_3" [attr.x1]="getRightCableX()" [attr.y1]="getRightCableFromNodeY2()"
         [attr.x2]="getRightCableX() + fuseTreeNode.children.length*settings.columnWidth + settings.cable.horizontalX2Offset" [attr.y2]="getRightCableFromNodeY2()"></svg:line>
 
 
@@ -73,6 +73,7 @@
      
 
 </svg:g>
+
 
 <!-- Assigned car here (if charging station) -->
 <svg:g *ngIf="getAssignedCar() !== null"> 
@@ -87,12 +88,33 @@
    </svg:text>
 </svg:g>
 
+<!-- If showing a single charging station, add the three horizontal cables above the station -->
+<svg:g *ngIf="isExplicitPhaseMatching()===true">
+    <!-- Phase 1 -->
+    <svg:text class="textPhase" [attr.x]="0" [attr.y]="getNodeY() - settings.cable.lengthWithoutPhases - settings.cable.phaseMargin -5">Phase 1</svg:text>
+    <svg:line class="lineCablePHASE_1" [attr.x1]="0" [attr.y1]="getNodeY() - settings.cable.lengthWithoutPhases - getCableLengthByPhase('PHASE_1')"
+    [attr.x2]="fuseTreeCircuitDiagram.getMaximumSVGWidth()" [attr.y2]="getNodeY() - settings.cable.lengthWithoutPhases - getCableLengthByPhase('PHASE_1')" ></svg:line>
+    
+    <!-- Phase 2 -->
+    <svg:text class="textPhase" [attr.x]="0" [attr.y]="getNodeY() - settings.cable.lengthWithoutPhases - 0*settings.cable.phaseMargin -5">Phase 2</svg:text>
+    <svg:line class="lineCablePHASE_2" [attr.x1]="0" [attr.y1]="getNodeY() - settings.cable.lengthWithoutPhases - getCableLengthByPhase('PHASE_2')"
+    [attr.x2]="fuseTreeCircuitDiagram.getMaximumSVGWidth()" [attr.y2]="getNodeY() - settings.cable.lengthWithoutPhases - getCableLengthByPhase('PHASE_2')" ></svg:line>
+    
+    <!-- Phase 3 -->
+    <svg:text class="textPhase" [attr.x]="0" [attr.y]="getNodeY() - settings.cable.lengthWithoutPhases + 1*settings.cable.phaseMargin-5">Phase 3</svg:text>
+    <svg:line class="lineCablePHASE_3" [attr.x1]="0" [attr.y1]="getNodeY() - settings.cable.lengthWithoutPhases - getCableLengthByPhase('PHASE_3')"
+    [attr.x2]="fuseTreeCircuitDiagram.getMaximumSVGWidth()" [attr.y2]="getNodeY() - settings.cable.lengthWithoutPhases - getCableLengthByPhase('PHASE_3')" ></svg:line>
+    
+
+</svg:g>
 
 
 
+
+
+<!-- children here-->
 <svg:g *ngIf="isChargingStation()===false" >
 
-    <!-- children here-->
     <!-- Example: 
     Fuse (current node, rowIndex=0)
     ---- Fuse (rowIndex=1)

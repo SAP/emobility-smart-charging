@@ -97,5 +97,14 @@ declare type circuitDiagramSettingsType = {
     chargeStation: {
         width: number, 
         height: number
+    },
+
+    legend: {
+        width: number, 
+        // Height is computed from 2*phaseMargin + 2*padding
+        padding: number,
+        marginTop: number, 
+        marginRight: number
     }
+
 }; 

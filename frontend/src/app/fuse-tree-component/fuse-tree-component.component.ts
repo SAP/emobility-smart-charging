@@ -24,7 +24,8 @@ export class FuseTreeComponentComponent implements OnInit {
     }
 
     getAssignedCar(): Car | null {
-        return this.appParent.getAssignedCarByFuseTreeNode(this.fuseTreeNode); 
+        const result = this.appParent.getAssignedCarByFuseTreeNode(this.fuseTreeNode); 
+        return result;  
     }
 
     getFuseTreeNodeLabel(fuseTreeNode: FuseTreeNode): string {
@@ -126,18 +127,45 @@ export class EditFuseTreeComponentDialog {
             appParent: AppComponent
         }) { }
 
-    onChangeFuse() {
+    onChangeFuse(): void {
         this.data.fuseTreeNode["fusePhase2"] = this.data.fuseTreeNode["fusePhase1"];
         this.data.fuseTreeNode["fusePhase3"] = this.data.fuseTreeNode["fusePhase1"];
     }
 
-    getPowerW() {
+    getPowerW(): number {
         return Utils.getFusePowerLimitW(this.data.fuseTreeNode);
     }
 
+    getChargingStationPhaseMatching(): phaseMatchingType {
+        return this.data.fuseTreeNode["phaseToGrid"] as phaseMatchingType; 
+    }
+    getChargingStationPhaseMatchingToChargingStation(): phaseMatchingType {
+        return this.data.fuseTreeNode["phaseToChargingStation"] as phaseMatchingType; 
+    }
 
-    onChangeChargingStationPhaseAssignment() {
-        console.log(event); 
+    onChangeChargingStationPhaseMatching(newPhaseMatching: phaseMatchingType): void {
+        // Set charging station to new phase matching
+        // Example with 231 matching: 
+        // phaseMatchingToGrid: { PHASE_1: PHASE_2, PHASE_2: PHASE_3, PHASE_3: PHASE_1 }
+        // --> I'm at the charging station and using its first phase. I'm drawing power from grid's second phase. 
+        // phaseMatchingToChargingStation: { PHASE_2: PHASE_1, PHASE_3: PHASE_2, PHASE_1: PHASE_3 }
+        // --> I'm at the grid and looking at its first phase. Charging station is drawing on its 3rd phase. 
+
+        const phaseMatching = this.getChargingStationPhaseMatching(); 
+        phaseMatching.PHASE_1 = newPhaseMatching.PHASE_1; 
+        phaseMatching.PHASE_2 = newPhaseMatching.PHASE_2; 
+        phaseMatching.PHASE_3 = newPhaseMatching.PHASE_3; 
+
+        const phaseMatchingToChargingStation = this.getChargingStationPhaseMatchingToChargingStation(); 
+        phaseMatchingToChargingStation[newPhaseMatching.PHASE_1] = "PHASE_1"; 
+        phaseMatchingToChargingStation[newPhaseMatching.PHASE_2] = "PHASE_2"; 
+        phaseMatchingToChargingStation[newPhaseMatching.PHASE_3] = "PHASE_3"; 
+        
+    }
+    isRadioButtonPhaseMatchingChecked(phaseMatching: phaseMatchingType): boolean {
+        return phaseMatching.PHASE_1 === this.getChargingStationPhaseMatching().PHASE_1 &&
+            phaseMatching.PHASE_2 === this.getChargingStationPhaseMatching().PHASE_2 &&
+            phaseMatching.PHASE_3 === this.getChargingStationPhaseMatching().PHASE_3; 
     }
 
 

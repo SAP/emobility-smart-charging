@@ -14,17 +14,19 @@
         <div *ngIf="data.fuseTreeNode['@type']==='ChargingStation'">
             <!-- Phase rotation -->
             <label id="phaseAssignmentRadioGroupLabel">Phase assignment (Phase at charging station ⟷ phase at grid) </label>
-            <mat-radio-group aria-labelledby="phaseAssignmentRadioGroupLabel" class="radioGroupPhaseAssignment"
-                (change)="onChangeChargingStationPhaseAssignment()"
-                >
-                <mat-radio-button class="radioButtonPhaseAssignment" *ngFor="let phaseMatching of phaseMatchings" [value]="phaseMatching.value">
-                    <div>
-                        <div class="floatLeft" style="width: 45%">
+            <mat-radio-group name="nameRadioGroupPhaseMatching" aria-labelledby="phaseAssignmentRadioGroupLabel" class="radioGroupPhaseMatching">
+                <mat-radio-button class="radioButtonPhaseMatching" *ngFor="let phaseMatching of phaseMatchings" 
+                [value]="phaseMatching.value"
+                [checked]="isRadioButtonPhaseMatchingChecked(phaseMatching.value)"
+                (change)="onChangeChargingStationPhaseMatching(phaseMatching.value)"
+                style="width: 100%">
+                    <div style="height: 129px; width: 100%">
+                        <div class="floatLeft centerVertically" style="width: 45%">
                             {{phaseMatching.label.split(";")[0]}}<br>
                             {{phaseMatching.label.split(";")[1]}}<br>
                             {{phaseMatching.label.split(";")[2]}}<br>
                         </div>
-                        <div class="floatRight" style="width: 45%">
+                        <div class="floatRight" style="width: 45%; height: 100%">
                             <app-fuse-tree-circuit-diagram [phaseMatching]="phaseMatching.value" 
                             [fuseTreeNode]="data.fuseTreeNode"
                             [appParent]="data.appParent"></app-fuse-tree-circuit-diagram>
