@@ -13,7 +13,7 @@ RUN mvn clean install -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.trans
 ##############
 ## Frontend ##
 ##############
-FROM node:12.2.0 as build_frontend
+FROM node:lts-alpine as build_frontend
 
 #Generate TypeScript interfaces of Java request classes (mvn clean install already does this)
 #mvn typescript-generator:generate
@@ -40,5 +40,3 @@ WORKDIR /workspace/app
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-Djava.security.egd=file:///dev/./urandom", "-jar", "target/emobility-smart-charging-0.0.1-SNAPSHOT.jar"]
-
-
