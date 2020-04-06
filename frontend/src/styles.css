@@ -73,8 +73,10 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
 .radioButtonPhaseMatching {
     margin: 5px;
 }
-
-
+/* Label of radio buttons should be wider */ 
+.radioButtonPhaseMatching .mat-radio-label-content {
+    width: 80%; 
+}
 
 /***
  SVG circuit diagram
