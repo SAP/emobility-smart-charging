@@ -64,9 +64,9 @@ docker build -t emobility_smart_charging .
 Next, start the application by running the container (the server runs on port 8080). 
 [Parameters](https://docs.docker.com/engine/reference/run/): 
 - `-d` Detached mode: Run container in the background
-- `-P` Publish all container's ports to the host: Change the port in `EXPOSE 8080` to adjust which port you want the application to run on
+- `-p` Publish a container's port to the host: Change the first port in `8080:8080` to adjust which port you want the application to run on
 ```
-docker run -d -P emobility_smart_charging
+docker run -d -p 8080:8080 emobility_smart_charging
 ```
 
 #### Without Docker

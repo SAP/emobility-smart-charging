@@ -1,8 +1,8 @@
-PROJECT_NAME:=evse
+PROJECT_NAME?=evse
 NAME:=emobility_smart_charging
-DOCKER_USER:=
-DOCKER_PASSWORD:=
-DOCKER_REGISTRY:=166296450311.dkr.ecr.eu-west-3.amazonaws.com
+DOCKER_USER?=
+DOCKER_PASSWORD?=
+DOCKER_ECR_REGISTRY?=
 
 .PHONY: $(NAME)-docker-start
 
@@ -21,7 +21,7 @@ $(NAME)-docker-build:
 	docker build -t $(PROJECT_NAME)_$(NAME) .
 
 $(NAME)-docker-start: $(NAME)-docker-build
-	docker run -d -P $(PROJECT_NAME)_$(NAME)
+	docker run -d -p 8080:8080 $(PROJECT_NAME)_$(NAME)
 
 clean-$(NAME)-image:
 	-docker rmi $(PROJECT_NAME)_$(NAME)
@@ -49,11 +49,11 @@ $(NAME)-docker-push: $(NAME)-docker-build $(NAME)-docker-tag
 	docker push $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME)
 
 $(NAME)-docker-ecr-tag:
-	docker tag $(PROJECT_NAME)_$(NAME):latest $(DOCKER_REGISTRY)/$(NAME):latest
+	docker tag $(PROJECT_NAME)_$(NAME):latest $(DOCKER_ECR_REGISTRY)/$(NAME):latest
 
 $(NAME)-docker-ecr-push: $(NAME)-docker-build $(NAME)-docker-ecr-tag
-	aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin $(DOCKER_REGISTRY)/$(NAME)
-	docker push $(DOCKER_REGISTRY)/$(NAME):latest
+	aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin $(DOCKER_ECR_REGISTRY)/$(NAME)
+	docker push $(DOCKER_ECR_REGISTRY)/$(NAME):latest
 
 ifeq ($(OS),Windows_NT)
 # FIXME
