@@ -2,6 +2,7 @@ PROJECT_NAME?=evse
 NAME:=emobility_smart_charging
 DOCKER_USER?=
 DOCKER_PASSWORD?=
+DOCKER_PORT?=8080
 DOCKER_ECR_REGISTRY?=
 
 .PHONY: $(NAME)-docker-start
@@ -21,7 +22,7 @@ $(NAME)-docker-build:
 	docker build -t $(PROJECT_NAME)_$(NAME) .
 
 $(NAME)-docker-start: $(NAME)-docker-build
-	docker run -d -p 8080:8080 $(PROJECT_NAME)_$(NAME)
+	docker run -d -p $(DOCKER_PORT):8080 $(PROJECT_NAME)_$(NAME)
 
 clean-$(NAME)-image:
 	-docker rmi $(PROJECT_NAME)_$(NAME)
