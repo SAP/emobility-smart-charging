@@ -216,23 +216,25 @@ export class FuseTreeCircuitDiagramComponent implements OnInit {
 
         const maxElementWidth = parentElement.clientWidth - parseFloat(computedStyle.paddingLeft) - parseFloat(computedStyle.paddingRight);  
         const maxElementHeight =  parentElement.clientHeight;  // 0.75*window.innerHeight; // If viewing complete circuit diagram: use 0.75 
-    
+        
+        console.log("Using maxElementHeight=" + maxElementHeight); 
+
         const elementAspectRatio = maxElementWidth / maxElementHeight; 
         // ratio > 1 ==> element can be wider than it is tall 
 
         if (svgAspectRatio > elementAspectRatio) {
             // SVG has higher width:height ratio than element ==> restrict height
-            console.log("here with ratio=" + svgAspectRatio + ", elementRatio=" + elementAspectRatio + ". Restricting height"); 
+            //console.log("here with ratio=" + svgAspectRatio + ", elementRatio=" + elementAspectRatio + ". Restricting height to: " + (maxElementWidth/svgAspectRatio)); 
             return {
                 width: maxElementWidth, 
-                height: Math.ceil(svgAspectRatio * maxElementWidth)
+                height: Math.ceil(maxElementWidth / svgAspectRatio)
             }; 
         }
         else {
             // SVG has lower ratio than element ==> restrict width
-            console.log("here with ratio=" + svgAspectRatio + ", elementRatio=" + elementAspectRatio + ". Restricting width"); 
+            //console.log("here with ratio=" + svgAspectRatio + ", elementRatio=" + elementAspectRatio + ". Restricting width"); 
             return {
-                width: Math.ceil(maxElementHeight / svgAspectRatio),
+                width: Math.ceil(maxElementHeight * svgAspectRatio),
                 height: maxElementHeight
             }; 
         }
