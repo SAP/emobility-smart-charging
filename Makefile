@@ -13,6 +13,7 @@ $(NAME)-build:
 	mvn clean install
 
 $(NAME)-build-frontend:
+	mvn typescript-generator:generate
 	cd frontend && npm install && npm run build:playground
 
 $(NAME)-start: $(NAME)-build
