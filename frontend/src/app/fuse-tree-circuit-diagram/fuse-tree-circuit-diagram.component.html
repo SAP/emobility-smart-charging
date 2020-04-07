@@ -5,6 +5,54 @@
     getMaximumSVGWidth(),
     getMaximumSVGHeight()]" >
 
+    <defs>
+        <style type="text/css">
+            .svgCircuitDiagram {
+                margin: 0 auto; 
+                display: block; 
+            }
+            
+            .lineCable {
+                stroke: black; 
+            }
+            .lineCablePHASE_1 {
+                stroke: brown; 
+            }
+            .lineCablePHASE_2 {
+                stroke: black; 
+            }
+            .lineCablePHASE_3 {
+                stroke: gray; 
+            }
+            
+            .circleConnectorPointPHASE_1 {
+                stroke: brown; 
+                fill: brown; 
+            }
+            .circleConnectorPointPHASE_2 {
+                stroke: black; 
+                fill: black; 
+            }
+            .circleConnectorPointPHASE_3 {
+                stroke: gray; 
+                fill: gray; 
+            }
+            
+            .rectFuse {
+                stroke: black; 
+                fill: white; 
+            }
+            
+            .textFuse {
+                text-anchor: middle; 
+                dominant-baseline: middle; /* centers on y axis */
+            }
+            .textPhase {
+                text-anchor: start;
+            }
+        </style>
+      </defs>
+
     <!-- Draw legend if drawing the whole circuit diagram-->
     <svg:g *ngIf="phaseMatching === null">
         <svg:rect class="rectFuse" 
