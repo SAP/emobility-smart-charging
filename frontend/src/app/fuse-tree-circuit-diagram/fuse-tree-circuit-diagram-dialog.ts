@@ -3,6 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 import { Car, StateStore } from 'src/assets/server_types';
 import { AppComponent } from '../app.component';
 import { Utils } from '../utils/Utils';
+import { SVG } from "@svgdotjs/svg.js"; 
 
 @Component({
     selector: 'fuse-tree-circuit-diagram-dialog',
@@ -23,8 +24,13 @@ export class FuseTreeCircuitDiagramDialog {
     }
 
     onClickSave(): void {
-        const svgCircuitDiagram: Element = document.getElementsByClassName("svgCircuitDiagram")[0];
-        Utils.createFileDownload("fuseTreeCircuitDiagram.svg", svgCircuitDiagram.outerHTML); 
+        //const svgCircuitDiagram: Element = document.getElementsByClassName("svgCircuitDiagram")[0];
+        //const svgContent = svgCircuitDiagram.outerHTML; 
+
+        const svgContent = SVG(".svgCircuitDiagram").svg(); 
+        Utils.createFileDownload("fuseTreeCircuitDiagram.svg", svgContent); 
     }
+
+
 
 }
