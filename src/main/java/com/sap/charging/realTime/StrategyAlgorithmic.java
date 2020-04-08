@@ -555,6 +555,9 @@ public class StrategyAlgorithmic extends Strategy {
 					if (updatedException.getFuse() != violatedFuse) {
 						thisFuseViolationFixed = true; 
 					}
+					else {
+						fuseTreeException = updatedException;
+					}
 				}
 				
 			}

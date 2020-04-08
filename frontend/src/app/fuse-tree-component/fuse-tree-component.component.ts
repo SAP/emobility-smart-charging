@@ -5,6 +5,7 @@ import { Utils } from '../utils/Utils';
 
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { phaseMatchingType } from 'src/global';
+import { MatCheckboxChange } from '@angular/material';
 
 @Component({
     selector: 'app-fuse-tree-component',
@@ -207,7 +208,21 @@ export class EditCarDialog {
         return this.data.car.canLoadPhase1+this.data.car.canLoadPhase2+this.data.car.canLoadPhase3; 
     }
 
-    refreshPhases() {
+    onChangeCanLoadPhase1(event: MatCheckboxChange): void {
+        this.data.car.canLoadPhase1 = event.checked ? 1 : 0; 
+        this.refreshTotalCurrentBasedOnPhases(); 
+    }
+
+    onChangeCanLoadPhase2(event: MatCheckboxChange): void {
+        this.data.car.canLoadPhase2 = event.checked ? 1 : 0; 
+        this.refreshTotalCurrentBasedOnPhases(); 
+    }
+    onChangeCanLoadPhase3(event: MatCheckboxChange): void {
+        this.data.car.canLoadPhase3 = event.checked ? 1 : 0; 
+        this.refreshTotalCurrentBasedOnPhases(); 
+    }
+
+    refreshTotalCurrentBasedOnPhases() {
         this.data.car.minCurrent = this.data.car.minCurrentPerPhase * this.getSumUsedPhases(); 
         this.data.car.maxCurrent = this.data.car.maxCurrentPerPhase * this.getSumUsedPhases(); 
     }

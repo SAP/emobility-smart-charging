@@ -52,20 +52,20 @@
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Minimum current per phase (ampere)</mat-label>
                 <input name="inputMinCurrent" type="number" matInput placeholder="Minimum current per phase"
-                    [(ngModel)]="data.car.minCurrentPerPhase" (change)="refreshPhases()">
+                    [(ngModel)]="data.car.minCurrentPerPhase" (change)="refreshTotalCurrentBasedOnPhases()">
             </mat-form-field>
             <mat-form-field appearance="outline" class="inputEditDialog">
                 <mat-label>Maximum current per phase (ampere)</mat-label>
                 <input name="inputMaxCurrent" type="number" matInput placeholder="Maximum current per phase"
-                    [(ngModel)]="data.car.maxCurrentPerPhase" (change)="refreshPhases()">
+                    [(ngModel)]="data.car.maxCurrentPerPhase" (change)="refreshTotalCurrentBasedOnPhases()">
             </mat-form-field>
 
             <mat-checkbox name="inputCanLoadPhase1" class="checkboxChartSetting" ngDefaultControl [disabled]="true"
-                (change)="refreshPhases()" [(ngModel)]="data.car.canLoadPhase1">Can charge on phase 1</mat-checkbox>
+                (change)="onChangeCanLoadPhase1($event)" [checked]="data.car.canLoadPhase1">Can charge on phase 1</mat-checkbox>
             <mat-checkbox name="inputCanLoadPhase2" class="checkboxChartSetting" ngDefaultControl
-                (change)="refreshPhases()" [(ngModel)]="data.car.canLoadPhase2">Can charge on phase 2</mat-checkbox>
+                (change)="onChangeCanLoadPhase2($event)" [checked]="data.car.canLoadPhase2">Can charge on phase 2</mat-checkbox>
             <mat-checkbox name="inputCanLoadPhase3" class="checkboxChartSetting" ngDefaultControl
-                (change)="refreshPhases()" [(ngModel)]="data.car.canLoadPhase3">Can charge on phase 3</mat-checkbox>
+                (change)="onChangeCanLoadPhase3($event)" [checked]="data.car.canLoadPhase3">Can charge on phase 3</mat-checkbox>
 
 
             <mat-form-field appearance="outline" class="inputEditDialog">
