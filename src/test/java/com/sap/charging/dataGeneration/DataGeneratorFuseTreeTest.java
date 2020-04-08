@@ -41,7 +41,7 @@ public class DataGeneratorFuseTreeTest {
 		assertEquals(CONSTANTS.FUSE_LEVEL_0_SIZE, root.getFusePhase(Phase.PHASE_2), 1e-8);
 		assertEquals(CONSTANTS.FUSE_LEVEL_0_SIZE, root.getFusePhase(Phase.PHASE_3), 1e-8);
 		
-		assertEquals("Fuse l0: 3x 4000.0A", root.toString());
+		assertEquals("Fuse l0: 3x " + CONSTANTS.FUSE_LEVEL_0_SIZE + "A", root.toString());
 		assertTrue(root.hasChildren());
 		Phase temp = null;
 		assertEquals(-1, root.getFusePhase(temp), 1e-8);

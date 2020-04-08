@@ -6,8 +6,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringRunner;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,7 +17,6 @@ import com.sap.charging.model.FuseTree;
 import com.sap.charging.sim.Simulation;
 import com.sap.charging.sim.common.SimulationUnitTest;
 
-@RunWith(SpringRunner.class)
 public class SerializationTest extends SimulationUnitTest {
 
 	ObjectMapper mapper;
@@ -90,7 +87,7 @@ public class SerializationTest extends SimulationUnitTest {
 		Fuse fuse = this.dataSimToy.getFuseTree().getRootFuse(); 
 		
 		String fuseJSON = mapper.writeValueAsString(fuse);
-		System.out.println(fuseJSON);
+		//System.out.println(fuseJSON);
 		
 		JSONObject obj = new JSONObject(fuseJSON);
 		assertEquals(fuse.fusePhase1, obj.get("fusePhase1")); 

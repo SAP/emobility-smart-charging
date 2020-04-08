@@ -20,6 +20,7 @@ import com.sap.charging.model.Car;
 import com.sap.charging.model.CarFactory;
 import com.sap.charging.model.CarFactory.CarModel;
 import com.sap.charging.model.ChargingStation;
+import com.sap.charging.model.EnergyUtil.Phase;
 import com.sap.charging.model.Fuse;
 import com.sap.charging.model.FuseTree;
 import com.sap.charging.model.FuseTreeNode;
@@ -762,6 +763,48 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
     }
 
     @Test
+    public void testHandleViolation_UpdateFuseTreeException() {
+    	strategy.setRescheduleCarsWith0A(false);
+    	
+    	int violatingTimeslot = Math.max(car1.getFirstAvailableTimeslot(), car2.getFirstAvailableTimeslot()); 
+    	boolean[] blockedTimeslots = new boolean[96]; 
+    	blockedTimeslots[violatingTimeslot] = true; 
+    	
+    	state.currentTimeslot = violatingTimeslot;
+    	state.currentTimeSeconds = Math.max(car1.timestampArrival.toSecondOfDay(), car2.timestampArrival.toSecondOfDay()); 
+    	state.addCarAssignment(car1, chargingStation1);
+    	state.addCarAssignment(car2, chargingStation2); 
+    	
+    	
+    	car1.getCurrentPlan()[violatingTimeslot] = 32;
+        car1.setCurrentCapacity(car1.minLoadingState + 1); // Make car 2 have higher priority
+        car2.getCurrentPlan()[violatingTimeslot] = 32;
+
+        // Exception: 50A over the top -> reduce by 32A and 18A 
+        // FuseTreeException must be updated internally for this
+        double deltaA = 50; 
+        
+        Map<Integer, FuseTreeException> violatingTimeslots = new HashMap<>(); 
+        Fuse parent = (Fuse) chargingStation1.getParent(); 
+        parent.fusePhase1 = 14; 
+        parent.fusePhase2 = 14; 
+        parent.fusePhase3 = 14; 
+        
+        double fuseTreeExceptionValuePerPhase = parent.getFusePhase(Phase.PHASE_1) + deltaA; 
+        
+        violatingTimeslots.put(violatingTimeslot, new FuseTreeException(chargingStation1.getParent(), 
+        		new double[] {fuseTreeExceptionValuePerPhase, fuseTreeExceptionValuePerPhase, fuseTreeExceptionValuePerPhase}, violatingTimeslot)); 
+        
+        strategy.handleViolation(state, violatingTimeslot, blockedTimeslots, violatingTimeslots);
+        
+        
+        assertEquals(14, car2.getCurrentPlan()[violatingTimeslot], 1e-8); 
+        assertEquals(0, car1.getCurrentPlan()[violatingTimeslot], 1e-8); 
+    }
+    
+    
+    
+    @Test
     public void testGetInitialFuseViolations() {
     	int violatingTimeslot = Math.max(car1.getFirstAvailableTimeslot(), car2.getFirstAvailableTimeslot()); 
     	
@@ -832,7 +875,7 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
 
     @Test
     public void testReactOptimize() {
-    	Simulation.verbosity = 3; 
+
     	// 2 cars, one arrived in the morning and one arrived now
     	int currentTimeSeconds = 16 * 3600; 
     	int currentTimeslot = TimeUtil.getTimeslotFromSeconds(currentTimeSeconds); 
