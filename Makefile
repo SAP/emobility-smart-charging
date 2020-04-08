@@ -3,6 +3,7 @@ NAME:=emobility_smart_charging
 DOCKER_USER?=
 DOCKER_PASSWORD?=
 DOCKER_PORT?=8080
+DOCKER_ECR_REGION?=eu-west-3
 DOCKER_ECR_REGISTRY?=
 
 .PHONY: $(NAME)-docker-start
@@ -54,7 +55,7 @@ $(NAME)-docker-ecr-tag:
 	docker tag $(PROJECT_NAME)_$(NAME):latest $(DOCKER_ECR_REGISTRY)/$(NAME):latest
 
 $(NAME)-docker-ecr-push: $(NAME)-docker-build $(NAME)-docker-ecr-tag
-	aws ecr get-login-password --region eu-west-3 | docker login --username AWS --password-stdin $(DOCKER_ECR_REGISTRY)/$(NAME)
+	aws ecr get-login-password --region $(DOCKER_ECR_REGION) | docker login --username AWS --password-stdin $(DOCKER_ECR_REGISTRY)/$(NAME)
 	docker push $(DOCKER_ECR_REGISTRY)/$(NAME):latest
 
 ifeq ($(OS),Windows_NT)
