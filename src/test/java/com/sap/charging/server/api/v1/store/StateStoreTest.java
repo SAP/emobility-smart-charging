@@ -17,6 +17,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
+import com.sap.charging.model.Fuse;
+import com.sap.charging.model.FuseTree;
 import com.sap.charging.realTime.State;
 import com.sap.charging.realTime.StrategyAlgorithmic;
 import com.sap.charging.realTime.model.CarAssignment;
@@ -36,6 +38,8 @@ public class StateStoreTest extends SimulationUnitTest {
 	final double maximumSiteLimitKW = 100; 
 	List<CarAssignmentStore> carAssignments; 
 	
+	StrategyAlgorithmic strategy; 
+	
 	@BeforeEach
 	public void setup() {
 		chargingStations = dataSim.getChargingStations()
@@ -44,6 +48,12 @@ public class StateStoreTest extends SimulationUnitTest {
 				.collect(Collectors.toList());
 		cars = dataSim.getCars(); 
 		carAssignments = new ArrayList<>(); 
+		
+		strategy = new StrategyAlgorithmic(new CarDepartureOracle());
+    	strategy.objectiveEnergyCosts.setWeight(0);
+    	strategy.objectiveFairShare.setWeight(1);
+    	strategy.setReoptimizeOnStillAvailableAfterExpectedDepartureTimeslot(true);
+    	strategy.setRescheduleCarsWith0A(false);
 	}
 	
 	@Test
@@ -105,14 +115,8 @@ public class StateStoreTest extends SimulationUnitTest {
 		
 		State state = stateStore.toState(); 
 		
-		StrategyAlgorithmic strategy = new StrategyAlgorithmic(new CarDepartureOracle());
-    	strategy.objectiveEnergyCosts.setWeight(0);
-    	strategy.objectiveFairShare.setWeight(1);
-    	strategy.setReoptimizeOnStillAvailableAfterExpectedDepartureTimeslot(true);
-    	strategy.setRescheduleCarsWith0A(false);
 		
     	Simulation.verbosity = 0; 
-		
 		strategy.reactReoptimize(state);
 		
 		// All cars should be planned to be fully charged 
@@ -129,6 +133,48 @@ public class StateStoreTest extends SimulationUnitTest {
 		assertNotEquals(car1.getCurrentPlan()[currentTimeslot], car2.getCurrentPlan()[currentTimeslot]);
 		
 	}
+	
+	@Test
+	public void test_FuseTree_And_ChargingStations_Passed_ShouldError() {
+		
+		ChargingStation station = new ChargingStation(); 
+		station.setID(0);
+		station.fusePhase1 = 10.666;
+		station.fusePhase2 = 10.666;
+		station.fusePhase3 = 10.666;
+		
+		Fuse childFuse = new Fuse(1, 10.666); 
+		childFuse.addChild(station);
+		Fuse rootFuse = new Fuse(0, 2.89); 
+		rootFuse.addChild(childFuse);
+		
+		FuseTree fuseTree = new FuseTree(rootFuse, 1); 
+		
+		chargingStations = new ArrayList<ChargingStationStore>(); 
+		chargingStations.add(ChargingStationStore.fromChargingStation(station)); 
+		
+		Car car = cars.get(0);
+		cars = new ArrayList<Car>(); 
+		cars.add(car); 
+		
+		
+		carAssignments.add(new CarAssignmentStore(car.getId(), station.getId())); 
+		
+		int currentTimeSeconds = car.timestampArrival.toSecondOfDay();  
+		
+		try {
+			new StateStore(currentTimeSeconds, fuseTree, chargingStations, null, cars, null, carAssignments); 
+			fail("Should have failed when passing fuseTree and a separate chargingStations array"); 
+		}
+		catch (Exception e) {}
+		
+		
+		
+	}
+	
+	
+	
+	
 	
 }
 

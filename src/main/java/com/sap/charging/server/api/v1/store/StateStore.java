@@ -16,6 +16,7 @@ import com.sap.charging.realTime.State;
 import com.sap.charging.realTime.model.CarAssignment;
 import com.sap.charging.realTime.model.CarAssignmentStore;
 import com.sap.charging.server.api.v1.exception.MissingParameterException;
+import com.sap.charging.server.api.v1.exception.ParameterCombinationException;
 import com.sap.charging.server.api.v1.exception.UnknownCarException;
 import com.sap.charging.server.api.v1.exception.UnknownChargingStationException;
 import com.sap.charging.util.TimeUtil;
@@ -45,8 +46,16 @@ public class StateStore {
 			@JsonProperty("energyPriceHistory") EnergyPriceHistory energyPriceHistory,
 			@JsonProperty(value = "carAssignments", required = true) List<CarAssignmentStore> carAssignments) {
 		this.currentTimeSeconds = currentTimeSeconds;
+		
+		// Allowed parameter combinations: 
+		// chargingStations & maximumSiteLimitKW
+		// fuseTree
+		
 		if (chargingStations == null && fuseTree == null) {
-			throw new MissingParameterException("chargingStations must be passed if fuse tree is not passed");
+			throw new MissingParameterException("Pass either fuseTree or chargingStations together with maximumSiteLimitKW");
+		} else if (chargingStations != null && fuseTree != null) {
+			throw new ParameterCombinationException("If passing a fuse tree, add charging stations in the fuse tree as children of fuses." + 
+													" Do not pass in a fuse tree as well as a separate array of charging stations."); 
 		} else if (chargingStations != null) {
 			this.chargingStations = chargingStations;
 			this.chargingStationsConverted = chargingStations.stream()
