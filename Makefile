@@ -51,10 +51,10 @@ $(NAME)-docker-tag:
 $(NAME)-docker-push: $(NAME)-docker-build $(NAME)-docker-tag
 	docker push $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME)
 
-$(NAME)-docker-ecr-tag:
+$(NAME)-docker-tag-ecr:
 	docker tag $(PROJECT_NAME)_$(NAME):latest $(DOCKER_ECR_REGISTRY)/$(NAME):latest
 
-$(NAME)-docker-ecr-push: $(NAME)-docker-build $(NAME)-docker-ecr-tag
+$(NAME)-docker-push-ecr: $(NAME)-docker-build $(NAME)-docker-tag-ecr
 	aws ecr get-login-password --region $(DOCKER_ECR_REGION) | docker login --username AWS --password-stdin $(DOCKER_ECR_REGISTRY)/$(NAME)
 	docker push $(DOCKER_ECR_REGISTRY)/$(NAME):latest
 
