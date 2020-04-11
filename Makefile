@@ -3,8 +3,9 @@ NAME:=emobility_smart_charging
 DOCKER_USER?=
 DOCKER_PASSWORD?=
 DOCKER_PORT?=8080
+DOCKER_TAG?=latest
+DOCKER_ECR_ACCOUNT_ID?=166296450311
 DOCKER_ECR_REGION?=eu-west-3
-DOCKER_ECR_REGISTRY?=
 
 .PHONY: $(NAME)-docker-start
 
@@ -46,17 +47,17 @@ clean-$(NAME)-containers:
 clean clean-$(NAME): clean-$(NAME)-containers clean-$(NAME)-images
 
 $(NAME)-docker-tag:
-	docker tag $(PROJECT_NAME)_$(NAME) $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME)
+	docker tag $(PROJECT_NAME)_$(NAME) $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME):$(DOCKER_TAG)
 
 $(NAME)-docker-push: $(NAME)-docker-build $(NAME)-docker-tag
-	docker push $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME)
+	docker push $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME):$(DOCKER_TAG)
 
 $(NAME)-docker-tag-ecr:
-	docker tag $(PROJECT_NAME)_$(NAME):latest $(DOCKER_ECR_REGISTRY)/$(NAME):latest
+	docker tag $(PROJECT_NAME)_$(NAME):$(DOCKER_TAG) $(DOCKER_ECR_ACCOUNT_ID).dkr.ecr.$(DOCKER_ECR_REGION).amazonaws.com/$(NAME):$(DOCKER_TAG)
 
 $(NAME)-docker-push-ecr: $(NAME)-docker-build $(NAME)-docker-tag-ecr
-	aws ecr get-login-password --region $(DOCKER_ECR_REGION) | docker login --username AWS --password-stdin $(DOCKER_ECR_REGISTRY)/$(NAME)
-	docker push $(DOCKER_ECR_REGISTRY)/$(NAME):latest
+	aws ecr get-login-password --region $(DOCKER_ECR_REGION) | docker login --username AWS --password-stdin $(DOCKER_ECR_ACCOUNT_ID).dkr.ecr.$(DOCKER_ECR_REGION).amazonaws.com/$(NAME)
+	docker push $(DOCKER_ECR_ACCOUNT_ID).dkr.ecr.$(DOCKER_ECR_REGION).amazonaws.com/$(NAME):$(DOCKER_TAG)
 
 ifeq ($(OS),Windows_NT)
 # FIXME
@@ -65,7 +66,7 @@ else
 $(NAME)-cf-push: export CF_DOCKER_PASSWORD=$(DOCKER_PASSWORD)
 endif
 $(NAME)-cf-push: $(NAME)-docker-push
-	cf push --docker-image $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME) --docker-username $(DOCKER_USER)
+	cf push --docker-image $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME):$(DOCKER_TAG) --docker-username $(DOCKER_USER)
 
 ifeq ($(OS),Windows_NT)
 # FIXME
@@ -74,7 +75,7 @@ else
 $(NAME)-cf-push-only: export CF_DOCKER_PASSWORD=$(DOCKER_PASSWORD)
 endif
 $(NAME)-cf-push-only:
-	cf push --docker-image $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME) --docker-username $(DOCKER_USER)
+	cf push --docker-image $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME):$(DOCKER_TAG) --docker-username $(DOCKER_USER)
 
 dist-clean-images:
 	docker image prune -a -f
