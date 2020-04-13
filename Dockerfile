@@ -25,7 +25,7 @@ WORKDIR /workspace/app/frontend
 RUN npm install
 
 # Build frontend (Angular 8)
-RUN npm run build:playground
+RUN npm run build:prod:playground
 
 
 ##################
