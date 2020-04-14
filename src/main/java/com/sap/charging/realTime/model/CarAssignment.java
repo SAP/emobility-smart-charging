@@ -64,6 +64,12 @@ public class CarAssignment extends Assignment {
 		
 		// Get actual phase 1 consumption 
 		// Which phase is the grid phase 1 at the charging station?
+		
+		// Example: 
+		// EV with 16A~1
+		// Station with 2,3,1 matching ==> 1st phase on station matches 2nd phase of grid
+		// Result array: [0, 16, 0]
+		
 		Phase phase1ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_1);
 		Phase phase2ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_2);
 		Phase phase3ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_3);

@@ -639,11 +639,58 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
         assertEquals(0, car1.getCurrentPlan()[car1.getFirstAvailableTimeslot()+1], 1e-8); 
         assertEquals(14, car1.getCurrentPlan()[car1.getFirstAvailableTimeslot()+2], 1e-8); 
     }
+    
+    @Test
+    public void testRescheduleCar_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse() {
+    	
+    	// EV uses phase 1
+    	// Station has 2,3,1 phase rotation (--> EV effectively charges on phase 2)
+    	// Fuse is 16,0,0 (does not allow charging on phase 2)
+    	// --> EV should not be able to charge
+    	
+    	car1 = CarFactory.builder()
+    			.set(CarModel.MERCEDES_GLC_350e)
+                .availableTimeslots(32, 68, 96)
+                .availableTimestamps(LocalTime.ofSecondOfDay(32 * 15 * 60), LocalTime.ofSecondOfDay(68 * 15 * 60))
+                .id(0)
+                .build();
+    	car1.setIdealCar(true);
+    	
+    	int violatingTimeslot = car1.getFirstAvailableTimeslot(); 
+    	state.currentTimeslot = violatingTimeslot;
+    	state.currentTimeSeconds = car1.timestampArrival.toSecondOfDay(); 
+    	car1.setCurrentPlan(new double[96]);
+    	car1.getCurrentPlan()[violatingTimeslot] = 16; 
+    	CarAssignment carAssignment = state.addCarAssignment(car1, chargingStation1); 
+    	
+    	// Ensure single phase EV
+    	assertEquals(1, car1.canLoadPhase1, 1e-8); 
+    	assertEquals(0, car1.canLoadPhase2, 1e-8); 
+    	assertEquals(0, car1.canLoadPhase3, 1e-8); 
+    	
+    	chargingStation1.setPhaseMatching(Phase.PHASE_2, Phase.PHASE_3, Phase.PHASE_1);
+    	
+    	Fuse fuse = (Fuse) chargingStation1.getParent(); 
+    	fuse.fusePhase1 = 16; 
+    	fuse.fusePhase2 = 0; 
+    	fuse.fusePhase3 = 0; 
+    	
+    	boolean[] blockedTimeslots = new boolean[96];
+    	blockedTimeslots[violatingTimeslot] = true; 
 
+    	Map<Integer, FuseTreeException> fuseTreeExceptions = strategy.getInitialFuseViolations(state, car1); 
+    	FuseTreeException fuseTreeException = fuseTreeExceptions.get(violatingTimeslot); 
+    	
+    	strategy.rescheduleCar(state, carAssignment, blockedTimeslots, violatingTimeslot, fuseTreeException);
+    	
+    	// Should be rescheduled to another timeslot
+    	assertEquals(0, car1.getCurrentPlan()[violatingTimeslot], 1e-8);
+    }	
+    
     
     
     @Test
-    public void testHandleSingleViolation() {
+    public void testHandleViolation() {
     	state.currentTimeSeconds = Math.max(car1.timestampArrival.toSecondOfDay(), car2.timestampArrival.toSecondOfDay()); 
     	state.currentTimeslot = TimeUtil.getTimeslotFromSeconds(state.currentTimeSeconds); 
     	state.addCarAssignment(car1, chargingStation1); 
@@ -677,8 +724,9 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
 
     }
 
+    
     @Test
-    public void testHandleTwoViolationsSameTimeslot() {
+    public void testHandleViolation_TwoViolationsSameTimeslot() {
     	int violatingTimeslot = Arrays.stream(new int[] {car1.getFirstAvailableTimeslot(), car2.getFirstAvailableTimeslot(), car3.getFirstAvailableTimeslot(), car4.getFirstAvailableTimeslot()})
         	  .max().getAsInt();
         
@@ -735,7 +783,7 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
     }
 
     @Test
-    public void testHandleSingleViolationNoPower() {
+    public void testHandleViolation_NoPower() {
         int violatingTimeslot = Math.max(car1.getFirstAvailableTimeslot(), car2.getFirstAvailableTimeslot()); 
 
         state.currentTimeSeconds = Math.max(car1.timestampArrival.toSecondOfDay(), car2.timestampArrival.toSecondOfDay()); 
@@ -825,6 +873,56 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
     }
 
     @Test
+    public void testGetInitialFuseViolations_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse() {
+    	// EV uses phase 1
+    	// Station has 2,3,1 phase rotation (--> EV effectively charges on phase 2)
+    	// Fuse is 16,0,0 (does not allow charging on phase 2)
+    	// --> EV should not be able to charge
+    	
+    	car1 = CarFactory.builder()
+    			.set(CarModel.MERCEDES_GLC_350e)
+                .availableTimeslots(32, 68, 96)
+                .availableTimestamps(LocalTime.ofSecondOfDay(32 * 15 * 60), LocalTime.ofSecondOfDay(68 * 15 * 60))
+                .id(0)
+                .build();
+    	car1.setIdealCar(true);
+    	
+    	int violatingTimeslot = car1.getFirstAvailableTimeslot(); 
+    	state.currentTimeslot = violatingTimeslot;
+    	state.currentTimeSeconds = car1.timestampArrival.toSecondOfDay(); 
+    	car1.setCurrentPlan(new double[96]);
+    	car1.getCurrentPlan()[violatingTimeslot] = 16; 
+    	state.addCarAssignment(car1, chargingStation1); 
+    	
+    	// Ensure single phase EV
+    	assertEquals(1, car1.canLoadPhase1, 1e-8); 
+    	assertEquals(0, car1.canLoadPhase2, 1e-8); 
+    	assertEquals(0, car1.canLoadPhase3, 1e-8); 
+    	
+    	chargingStation1.setPhaseMatching(Phase.PHASE_2, Phase.PHASE_3, Phase.PHASE_1);
+    	
+    	Fuse fuse = (Fuse) chargingStation1.getParent(); 
+    	fuse.fusePhase1 = 16; 
+    	fuse.fusePhase2 = 0; 
+    	fuse.fusePhase3 = 0; 
+
+    	Map<Integer, FuseTreeException> fuseTreeExceptions = strategy.getInitialFuseViolations(state, car1); 
+    	assertEquals(1, fuseTreeExceptions.size());
+    	
+    	FuseTreeException e = fuseTreeExceptions.get(violatingTimeslot); 
+    	assertEquals(fuse, e.getFuse());
+    	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
+    	assertEquals(16, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8); 
+    	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8); 
+    	
+    	assertEquals(-16, e.getDeltaByPhase(Phase.PHASE_1), 1e-8);
+    	assertEquals(16, e.getDeltaByPhase(Phase.PHASE_2), 1e-8);
+    	assertEquals(0, e.getDeltaByPhase(Phase.PHASE_3), 1e-8);
+    	
+    }	
+    
+    
+    @Test
     public void testResolveViolations() {
     	strategy.setRescheduleCarsWith0A(false);
     	
@@ -855,6 +953,133 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
         assertEquals(0, violatingTimeslots.size());
 
     }
+    
+    
+    @Test
+    public void testResolveViolations_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse() {
+    	
+    	// EV uses phase 1
+    	// Station has 2,3,1 phase rotation (--> EV effectively charges on phase 2)
+    	// Fuse is 16,0,0 (does not allow charging on phase 2)
+    	// --> EV should not be able to charge
+    	
+    	car1 = CarFactory.builder()
+    			.set(CarModel.MERCEDES_GLC_350e)
+                .availableTimeslots(32, 68, 96)
+                .availableTimestamps(LocalTime.ofSecondOfDay(32 * 15 * 60), LocalTime.ofSecondOfDay(68 * 15 * 60))
+                .id(0)
+                .build();
+    	car1.setIdealCar(true);
+    	
+    	int violatingTimeslot = car1.getFirstAvailableTimeslot(); 
+    	state.currentTimeslot = violatingTimeslot;
+    	state.currentTimeSeconds = car1.timestampArrival.toSecondOfDay(); 
+    	car1.setCurrentPlan(new double[96]);
+    	car1.getCurrentPlan()[violatingTimeslot] = 16; 
+    	state.addCarAssignment(car1, chargingStation1); 
+    	
+    	// Ensure single phase EV
+    	assertEquals(1, car1.canLoadPhase1, 1e-8); 
+    	assertEquals(0, car1.canLoadPhase2, 1e-8); 
+    	assertEquals(0, car1.canLoadPhase3, 1e-8); 
+    	
+    	chargingStation1.setPhaseMatching(Phase.PHASE_2, Phase.PHASE_3, Phase.PHASE_1);
+    	
+    	Fuse fuse = (Fuse) chargingStation1.getParent(); 
+    	fuse.fusePhase1 = 16; 
+    	fuse.fusePhase2 = 0; 
+    	fuse.fusePhase3 = 0; 
+    	
+    	boolean[] blockedTimeslots = new boolean[96];
+    	blockedTimeslots[violatingTimeslot] = true; 
+
+    	Map<Integer, FuseTreeException> fuseTreeExceptions = strategy.getInitialFuseViolations(state, car1); 
+    	
+    	strategy.resolveViolations(state, fuseTreeExceptions); 
+    	
+    	// Car should not be able to charge at all
+    	for (int k=0; k<96;k++) {
+    		assertEquals(0, car1.getCurrentPlan()[k], 1e-8); 
+    	}
+    }
+    
+    
+    @Test
+    public void testResolveViolations_CorrectCarIsRescheduled_ByPhase() {
+    	// Make sure the correct car is rescheduled 
+    	// Example: 
+    	// Fuse with (16A, 0A, 0A)
+    	// Station1 with 1,2,3 mapping
+    	// Car1 (16A~1) with lower priority
+    	// Station2 with 2,3,1 mapping
+    	// Car2 (16A~1) with higher priority
+    	// --> Car1 should not be rescheduled since phase 1 is OK
+    	
+    	car1 = CarFactory.builder()
+    			.set(CarModel.MERCEDES_GLC_350e)
+                .availableTimeslots(32, 68, 96)
+                .availableTimestamps(LocalTime.ofSecondOfDay(32 * 15 * 60), LocalTime.ofSecondOfDay(68 * 15 * 60))
+                .id(0)
+                .build();
+    	car1.setIdealCar(true);
+    	car1.setCurrentPlan(new double[96]);
+    	car2 = CarFactory.builder()
+    			.set(CarModel.MERCEDES_GLC_350e)
+                .availableTimeslots(32, 68, 96)
+                .availableTimestamps(LocalTime.ofSecondOfDay(32 * 15 * 60), LocalTime.ofSecondOfDay(68 * 15 * 60))
+                .id(1)
+                .build();
+    	car2.setIdealCar(true);
+    	car2.setCurrentPlan(new double[96]);
+    	
+    	// Should both be single phase EVs
+    	assertEquals(1, car1.sumUsedPhases, 1e-8); 
+    	assertEquals(1, car2.sumUsedPhases, 1e-8); 
+    	
+    	// Set station2 to have 2,3,1 phase matching
+    	chargingStation2.setPhaseMatching(Phase.PHASE_2, Phase.PHASE_3, Phase.PHASE_1);
+    	
+    	Fuse fuse = (Fuse) chargingStation1.getParent(); 
+    	fuse.fusePhase1 = 16; 
+    	fuse.fusePhase2 = 0; 
+    	fuse.fusePhase3 = 0; 
+    	
+    	
+    	int violatingTimeslot = Math.max(car1.getFirstAvailableTimeslot(), car2.getFirstAvailableTimeslot()); 
+
+        state.currentTimeSeconds = Math.max(car1.timestampArrival.toSecondOfDay(), car2.timestampArrival.toSecondOfDay()); 
+        state.currentTimeslot = TimeUtil.getTimeslotFromSeconds(state.currentTimeSeconds); 
+        state.addCarAssignment(car1, chargingStation1); 
+        state.addCarAssignment(car2, chargingStation2); 
+        
+        boolean[] blockedTimeslots = new boolean[96];
+        blockedTimeslots[violatingTimeslot] = true;
+
+        car1.getCurrentPlan()[violatingTimeslot] = 16;
+        car1.setCurrentCapacity(car1.minLoadingState + 1); // Make car 2 have higher priority
+        car2.getCurrentPlan()[violatingTimeslot] = 16;
+       
+        Map<Integer, FuseTreeException> violatingTimeslots = strategy.getInitialFuseViolations(state, null); 
+        FuseTreeException fuseTreeException = violatingTimeslots.get(violatingTimeslot); 		
+        
+        assertEquals(Phase.PHASE_2, fuseTreeException.getPhaseWithHighestDelta()); 
+        assertEquals(0, fuseTreeException.getDeltaByPhase(Phase.PHASE_1), 1e-8);
+        assertEquals(16, fuseTreeException.getDeltaByPhase(Phase.PHASE_2), 1e-8); 
+        assertEquals(0, fuseTreeException.getDeltaByPhase(Phase.PHASE_3), 1e-8); 
+        
+        strategy.resolveViolations(state, violatingTimeslots);
+        
+        // Car1 should not be rescheduled since phase 1 is fine
+        assertEquals(16, car1.getCurrentPlan()[violatingTimeslot], 1e-8); 
+    	
+        // Car2 should not be able to charge at all since it charges effectively on 2nd phase due to phase matching
+        for (int k=0;k<96;k++) {
+        	assertEquals(0, car2.getCurrentPlan()[k], 1e-8); 
+        }
+    }	
+
+    
+    
     
     /******************************
      * React to events
