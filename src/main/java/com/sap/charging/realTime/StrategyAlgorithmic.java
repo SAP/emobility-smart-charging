@@ -534,8 +534,9 @@ public class StrategyAlgorithmic extends Strategy {
 			}
 			
 			CarAssignment carAssignmentLowestPriority = sortedViolatingCars.get(0).index;
-			
-			double plannedCurrent = carAssignmentLowestPriority.car.getCurrentPlan()[violatingK];
+			// Check consumption on correct phase --> Check whether EV with lowest priority causes exception
+			double[] consumptionPerGridPhase = carAssignmentLowestPriority.getCurrentPerGridPhase(violatingK); 
+			double plannedCurrent = consumptionPerGridPhase[fuseTreeException.getPhaseWithHighestDelta().asInt()-1]; 
 			
 			log(2, "Car n=" + carAssignmentLowestPriority.car.getId() + " has lowest priority (" 
 					+ sortedViolatingCars.get(0).value 
@@ -613,15 +614,21 @@ public class StrategyAlgorithmic extends Strategy {
 		
 		if (rescheduleCarsWith0A) {
 			// Legacy / backwards compatible behaviour: Cars are rescheduled by assigning 0A to the violated timeslot instead of the maximum possible
-			// How much charged energy (Ah) are we missing because we are setting this slot to 0?
 			planToChange[violatingK] = 0;
 		}
 		else {
-			// Better (example): 32A assigned, 14A over violated timeslot. Should assign 18A instead of 0A
-	        
-	        // amount over the top, the 14A (to resolve the violation)
+			// Example: 
+			// EV (32A, 0A, 0A)
+			// Station with  2,3,1 phase rotation --> EV is charging on phase 2
+			// Fuse (18A, 18A, 18A) 
+			// --> 32A assigned, 14A over violated timeslot on phase 2. Should assign 18A
+			
+			// Which phase leads to the EV's charge plan to be reduced?
+			Phase phaseHighestDelta = fuseTreeException.getPhaseWithHighestDelta(); 
+			
+	        // Amount over the top, the 14A (to resolve the violation)
 	        // If the difference is negative (i.e. fuse won't be broken), no need to reduce  
-	        double amountToReduceBy = Math.max(0, fuseTreeException.getHighestSumConsumed() - fuseTreeException.getFuse().getFusePhase(Phase.PHASE_1)); 
+	        double amountToReduceBy = Math.max(0, fuseTreeException.getDeltaByPhase(phaseHighestDelta)); 
 	        // Possibly car is planned with less than 14A
 	        double amountToReducePlanBy = Math.min(planToChange[violatingK], amountToReduceBy); 
 	        // Reduce car plan by 14A (or less, if it was only planned with less)
@@ -632,8 +639,9 @@ public class StrategyAlgorithmic extends Strategy {
 	        }
 	        log(2, "Rescheduling car=" + car.getId() + " at violatingK=" + violatingK + ": Reducing originalCurrent=" + Util.formatDouble(originalPlannedCurrent) +
 	        	   "A by amountToReducePlanBy=" + Util.formatDouble(amountToReducePlanBy) + "A to " + Util.formatDouble(planToChange[violatingK]) + 
-	        	   "A, fuseTreeException.highestSum()=" + Util.formatDouble(fuseTreeException.getHighestSumConsumed()) + 
-	        	   "A, fuse=" + fuseTreeException.getFuse().getFusePhase(Phase.PHASE_1));
+	        	   "A, phaseHighestDelta=" + phaseHighestDelta + 
+	        	   ", consumption=" + fuseTreeException.getSumConsumedByPhase(phaseHighestDelta) + 
+	        	   "A, fuse=" + fuseTreeException.getFuse().getFusePhase(phaseHighestDelta) + "A");
 	    }
 		
 		

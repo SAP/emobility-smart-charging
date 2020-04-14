@@ -89,7 +89,7 @@ public class StateStoreTest extends SimulationUnitTest {
 	@Test
 	public void test_PassFuseTree_ChargingStationParent_NotNull() throws JsonMappingException, JsonProcessingException {
 		
-		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/testFuseTooSmall_4_Cars.json"); 
+		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_FuseTooSmall_4_Cars.json"); 
 		
 		ObjectMapper objectMapper = new ObjectMapper();
 		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
@@ -104,9 +104,9 @@ public class StateStoreTest extends SimulationUnitTest {
 	}
 	
 	@Test
-	public void test_OptimizeState() throws JsonMappingException, JsonProcessingException {
+	public void test_OptimizeState_WithUnassignedCars() throws JsonMappingException, JsonProcessingException {
 		
-		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/testFuseTooSmall_4_Cars.json"); 
+		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_FuseTooSmall_4_Cars.json"); 
 		
 		ObjectMapper objectMapper = new ObjectMapper();
 		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
@@ -133,6 +133,31 @@ public class StateStoreTest extends SimulationUnitTest {
 		assertNotEquals(car1.getCurrentPlan()[currentTimeslot], car2.getCurrentPlan()[currentTimeslot]);
 		
 	}
+	
+	
+	@Test
+	public void test_OptimizeState_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse() throws JsonMappingException, JsonProcessingException {
+		// See also StrategyAlgorithmicTest.testRescheduleCar_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse
+		
+		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse.json"); 
+		
+		ObjectMapper objectMapper = new ObjectMapper();
+		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
+		StateStore stateStore = request.state; 
+		
+		
+		State state = stateStore.toState(); 
+		
+		
+    	Simulation.verbosity = 0; 
+		strategy.reactReoptimize(state);
+		Car car = state.getCar(0); 
+		
+		for (int k=0; k<96; k++) {
+			assertEquals(0, car.getCurrentPlan()[k], 1e-8); 
+		}
+	}
+	
 	
 	@Test
 	public void test_FuseTree_And_ChargingStations_Passed_ShouldError() {
