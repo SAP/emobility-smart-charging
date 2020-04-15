@@ -6,6 +6,7 @@ import java.util.List;
 
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
+import com.sap.charging.model.EnergyUtil.Phase;
 import com.sap.charging.model.battery.BatterySim;
 import com.sap.charging.model.battery.BatterySimParameters;
 import com.sap.charging.opt.CONSTANTS;
@@ -75,7 +76,7 @@ public class StrategyAlgorithmicChargeScheduler implements Loggable {
 	 */
 	public double getPlannedCapacity(ChargingStation chargingStation, Car car, int currentTimeSeconds, int intervalSecondsStart, int intervalSecondsEnd) {
 		if (isNonlinearChargingRecognized() == false) {
-			return getPlannedCapacityLinear(car, currentTimeSeconds, intervalSecondsStart, intervalSecondsEnd);
+			return getPlannedCapacityLinear(chargingStation, car, currentTimeSeconds, intervalSecondsStart, intervalSecondsEnd);
 		}
 		else {
 			return getPlannedCapacityNonlinear(chargingStation, car, currentTimeSeconds, intervalSecondsStart, intervalSecondsEnd); 
@@ -83,9 +84,9 @@ public class StrategyAlgorithmicChargeScheduler implements Loggable {
 	}
 	
 	
-	public double getPlannedCapacityLinear(Car car, int currentTimeSeconds, int intervalSecondsStart, int intervalSecondsEnd) {
-		double chargedAhUntilInterval = getPlannedCapacityLinear(car, currentTimeSeconds, intervalSecondsStart);
-		double chargedAhAtEndOfInterval = getPlannedCapacityLinear(car, currentTimeSeconds, intervalSecondsEnd);
+	public double getPlannedCapacityLinear(ChargingStation chargingStation, Car car, int currentTimeSeconds, int intervalSecondsStart, int intervalSecondsEnd) {
+		double chargedAhUntilInterval = getPlannedCapacityLinear(chargingStation, car, currentTimeSeconds, intervalSecondsStart);
+		double chargedAhAtEndOfInterval = getPlannedCapacityLinear(chargingStation, car, currentTimeSeconds, intervalSecondsEnd);
 		
 		return chargedAhAtEndOfInterval - chargedAhUntilInterval;
 	}
@@ -98,8 +99,8 @@ public class StrategyAlgorithmicChargeScheduler implements Loggable {
 	 * @param currentTimeSeconds will be used as basis for only taking fraction of first timeslot
 	 * @return Charged Ah of plan from currentTimeSeconds to secondsEnd
 	 */
-	public double getPlannedCapacityLinear(Car car, int currentTimeSeconds, int secondsEnd) {
-		double resultCurrent = 0;
+	public double getPlannedCapacityLinear(ChargingStation chargingStation, Car car, int currentTimeSeconds, int secondsEnd) {
+		double resultCurrentPerPhase = 0;
 		for (int k=0;k<car.getCurrentPlan().length;k++) {
 			
 			if (car.getCurrentPlan()[k] < 0) {
@@ -115,11 +116,11 @@ public class StrategyAlgorithmicChargeScheduler implements Loggable {
 				// If currentTimeSeconds lies in middle of timeslot=k
 				// Example: CurrentTimeSeconds = 28450, timeslotStartSeconds = 27900 (k=31)
 				// Here we can't charge the full 900s but only 900-550=350 seconds
-				resultCurrent += 1.0*(15*60 - secondsAfterTimeslotStart)/(15.0*60.0) * car.getCurrentPlan()[k];
+				resultCurrentPerPhase += 1.0*(15*60 - secondsAfterTimeslotStart)/(15.0*60.0) * car.getCurrentPlan()[k];
 			}
 			else if (timeslotStartSeconds >= currentTimeSeconds) {
 				// Otherwise, as long as we are looking at future timeslots we can use full timeslot for charging
-				resultCurrent += car.getCurrentPlan()[k];
+				resultCurrentPerPhase += car.getCurrentPlan()[k];
 			}
 			
 			if (secondsEnd <= timeslotEndSeconds) {
@@ -130,15 +131,40 @@ public class StrategyAlgorithmicChargeScheduler implements Loggable {
 				// But: currentTimeSeconds could also be > timeslotStartSeconds (start=300, end=600, in this case still subtract 1/3)
 				
 				int secondsBeforeTimeslotEnd = timeslotEndSeconds - secondsEnd;
-				resultCurrent -= 1.0*secondsBeforeTimeslotEnd / (15*60) * car.getCurrentPlan()[k];
+				resultCurrentPerPhase -= 1.0*secondsBeforeTimeslotEnd / (15*60) * car.getCurrentPlan()[k];
 				break;
 			}
 			
 		}
+		
+		
 		// Convert from current (A) to charged energy (Ah)
-		return CONSTANTS.CHARGING_EFFICIENCY * car.sumUsedPhases * resultCurrent / 4;		
+		return CONSTANTS.CHARGING_EFFICIENCY * this.getSumUsedPhases(chargingStation, car) * resultCurrentPerPhase / 4;		
 	}
 	
+	
+	public double getSumUsedPhases(ChargingStation station, Car car) {
+		// How many phases is the EV actually using depending on which phases are connected?
+		double sumUsedPhases = 0; 
+		if (car.canLoadPhase1 > 0 && station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1)) {
+			sumUsedPhases += car.canLoadPhase1; 
+		}
+		if (car.canLoadPhase2 > 0 && station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2)) {
+			sumUsedPhases += car.canLoadPhase2; 
+		}
+		if (car.canLoadPhase3 > 0 && station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3)) {
+			sumUsedPhases += car.canLoadPhase3; 
+		}
+		if (sumUsedPhases == 0) {
+			throw new RuntimeException("Car id=" + car.getId() + " would be unable to charge at station id=" + 
+					station.getId() + " because of fuse connections:\n" + 
+					"car.canLoadPhase1=" + car.canLoadPhase1 + ", station.isPhase1AtStationConnectedInFuseTree=" + station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1) + ";\n" +
+					"car.canLoadPhase2=" + car.canLoadPhase2 + ", station.isPhase2AtStationConnectedInFuseTree=" + station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2) + ";\n" +
+					"car.canLoadPhase3=" + car.canLoadPhase3 + ", station.isPhase3AtStationConnectedInFuseTree=" + station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3)
+					); 
+		}
+		return sumUsedPhases; 
+	}
 	
 	
 	HashMap<PlannedCapacityKey, Double> plannedCapacityHashMap = new HashMap<>();
@@ -434,7 +460,8 @@ public class StrategyAlgorithmicChargeScheduler implements Loggable {
 				// Fill up current plan with maximum possible amount							
 				if (isNonlinearChargingRecognized() == false) {
 					// If linear charging: This statement fills up the last slot (dont use max current but spread it out over 15 mins)
-					currentPlan[k] = Math.min(maxCurrentPerPhase, this.getCurrentToFillTimeslot_linear(desiredCapacity, car.sumUsedPhases, timeslotStartSeconds, timeslotEndSeconds, originalPlannedTimeslotCurrent)); 
+					double sumUsedPhases = this.getSumUsedPhases(chargingStation, car); 
+					currentPlan[k] = Math.min(maxCurrentPerPhase, this.getCurrentToFillTimeslot_linear(desiredCapacity, sumUsedPhases, timeslotStartSeconds, timeslotEndSeconds, originalPlannedTimeslotCurrent)); 
 				}
 				else {
 					// In nonlinear charging, the "filling up" is done during simulation

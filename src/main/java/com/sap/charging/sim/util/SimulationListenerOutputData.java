@@ -37,7 +37,7 @@ public class SimulationListenerOutputData implements SimulationListener
     public void callbackAfterUpdate(State state)
     {
         double aggregatedCurrent = state.getCurrentPowerAssignments().stream()
-                .mapToDouble(p -> p.phase1+p.phase2+p.phase3)
+                .mapToDouble(p -> p.getPhase1()+p.getPhase2()+p.getPhase3())
                 .sum();
         //double aggregatedPower = EnergyUtil.calculatePFromI(aggregatedCurrent, 1);
         double aggregatedCurrentPlanLimit = state.getCurrentPowerAssignments().stream()

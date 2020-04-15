@@ -3,7 +3,6 @@ package com.sap.charging.realTime.model;
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
 import com.sap.charging.model.EnergyUtil.Phase;
-import com.sap.charging.model.FuseTreeNode;
 import com.sap.charging.util.JSONSerializable;
 
 public abstract class Assignment implements JSONSerializable {
@@ -17,7 +16,7 @@ public abstract class Assignment implements JSONSerializable {
 		this.chargingStation = chargingStation;
 	}
 	
-	public abstract double getCarCurrentByPhaseAtGrid(Phase phaseAtGrid, int timeslot); 
+	public abstract double getCarCurrentByPhaseAtStation(Phase phaseAtStation, int timeslot); 
 	
 	
 	public final double[] getCurrentPerGridPhase(int timeslot) {
@@ -32,59 +31,40 @@ public abstract class Assignment implements JSONSerializable {
 		// Station with 2,3,1 matching ==> 1st phase on station matches 2nd phase of grid
 		// Result array: [0, 16, 0]
 		
+		// How are phases mapped at charging station?
 		Phase phase1ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_1);
 		Phase phase2ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_2);
 		Phase phase3ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_3);
 		
 		// Check whether each phase is connected throughout the fuse tree
-		boolean phase1ConnectedInFuseTree = this.isPhaseConnectedInFuseTree(Phase.PHASE_1, phase1ChargingStation); 
-		boolean phase2ConnectedInFuseTree = this.isPhaseConnectedInFuseTree(Phase.PHASE_2, phase2ChargingStation); 
-		boolean phase3ConnectedInFuseTree = this.isPhaseConnectedInFuseTree(Phase.PHASE_3, phase3ChargingStation); 
+		boolean phase1ConnectedInFuseTree = chargingStation.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_1); 
+		boolean phase2ConnectedInFuseTree = chargingStation.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_2); 
+		boolean phase3ConnectedInFuseTree = chargingStation.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_3); 
 
-		currentAtGrid[0] = phase1ConnectedInFuseTree ? this.getCarCurrentByPhaseAtGrid(phase1ChargingStation, timeslot) : 0;
-		currentAtGrid[1] = phase2ConnectedInFuseTree ? this.getCarCurrentByPhaseAtGrid(phase2ChargingStation, timeslot) : 0; 
-		currentAtGrid[2] = phase3ConnectedInFuseTree ? this.getCarCurrentByPhaseAtGrid(phase3ChargingStation, timeslot) : 0; 
+		currentAtGrid[0] = phase1ConnectedInFuseTree ? this.getCarCurrentByPhaseAtStation(phase1ChargingStation, timeslot) : 0;
+		currentAtGrid[1] = phase2ConnectedInFuseTree ? this.getCarCurrentByPhaseAtStation(phase2ChargingStation, timeslot) : 0; 
+		currentAtGrid[2] = phase3ConnectedInFuseTree ? this.getCarCurrentByPhaseAtStation(phase3ChargingStation, timeslot) : 0; 
 		
 		return currentAtGrid;
 		
 	}
 	
-	
-	/**
-	 * Checks whether a phase connected throughout the complete fuse tree.
-	 * If phase is not connected the EV does not charge on this phase.
-	 * 
-	 * Example: 
-	 * Station with 2,3,1 matching
-	 * phaseAtChargingStation 
-	 * ==> PHASE_1 or PHASE_2 or PHASE3
-	 * phaseAtGrid 
-	 * ==> PHASE_2 or PHASE_3 or PHASE_1
-	 * 
-	 * 
-	 * 
-	 * @param phaseAtChargingStation
-	 * @param phaseAtGrid
-	 * @return
-	 */
-	public boolean isPhaseConnectedInFuseTree(Phase phaseAtChargingStation, Phase phaseAtGrid) {
-		 
-		// Check whether charging station is connected on its local phase
-		if (chargingStation.isPhaseConnected(phaseAtChargingStation) == false) {
-			return false; 
-		}
+	public final double[] getCurrentPerStationPhase(int timeslot) {
 		
-		// Check the chain of parent FuseTreeNodes in the fuse tree if this phase is connected 
-		FuseTreeNode parent = chargingStation.getParent(); 
-		while (parent != null) {
-			if (parent.isPhaseConnected(phaseAtGrid) == false) {
-				return false; 
-			}
-			parent = parent.getParent(); 
-		}
+		double[] currentAtStation = new double[3]; 
 		
-		return true; 
+		// Check whether each phase is connected throughout the fuse tree
+		boolean phase1ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1); 
+		boolean phase2ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2); 
+		boolean phase3ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3); 
+
+		currentAtStation[0] = phase1ConnectedInFuseTree ? this.getCarCurrentByPhaseAtStation(Phase.PHASE_1, timeslot) : 0;
+		currentAtStation[1] = phase2ConnectedInFuseTree ? this.getCarCurrentByPhaseAtStation(Phase.PHASE_2, timeslot) : 0; 
+		currentAtStation[2] = phase3ConnectedInFuseTree ? this.getCarCurrentByPhaseAtStation(Phase.PHASE_3, timeslot) : 0; 
+		
+		return currentAtStation; 
 	}
+	
 	
 	
 }

@@ -11,6 +11,7 @@ import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
 import com.sap.charging.model.EnergyPriceHistory;
 import com.sap.charging.model.EnergyUtil.Phase;
+import com.sap.charging.model.Fuse;
 import com.sap.charging.model.FuseTreeNode;
 import com.sap.charging.model.battery.BatterySim;
 import com.sap.charging.opt.lp.Objective;
@@ -535,8 +536,14 @@ public class StrategyAlgorithmic extends Strategy {
 			
 			CarAssignment carAssignmentLowestPriority = sortedViolatingCars.get(0).index;
 			// Check consumption on correct phase --> Check whether EV with lowest priority causes exception
-			double[] consumptionPerGridPhase = carAssignmentLowestPriority.getCurrentPerGridPhase(violatingK); 
-			double plannedCurrent = consumptionPerGridPhase[fuseTreeException.getPhaseWithHighestDelta().asInt()-1]; 
+			// Differentiate between charging station exceptions and fuse exceptions:
+			// On fuses use currentPerGridPhase
+			// On chargingStation use currentPerStationPhase (so that it matches the correct fuseSize)
+			double[] consumption = fuseTreeException.getFuse() instanceof Fuse ? 
+					carAssignmentLowestPriority.getCurrentPerGridPhase(violatingK) :
+					carAssignmentLowestPriority.getCurrentPerStationPhase(violatingK); 
+					
+			double plannedCurrent = consumption[fuseTreeException.getPhaseWithHighestDelta().asInt()-1]; 
 			
 			log(2, "Car n=" + carAssignmentLowestPriority.car.getId() + " has lowest priority (" 
 					+ sortedViolatingCars.get(0).value 

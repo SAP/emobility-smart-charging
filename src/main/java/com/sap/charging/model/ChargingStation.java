@@ -66,9 +66,9 @@ public class ChargingStation implements FuseTreeNode {
 	 */
 	public double fusePhase3 = Double.MIN_VALUE;
 
-	private final boolean phase1Connected;
-	private final boolean phase2Connected;
-	private final boolean phase3Connected;
+	private boolean phase1Connected;
+	private boolean phase2Connected;
+	private boolean phase3Connected;
 
 	public boolean isBEVAllowed;
 	public boolean isPHEVAllowed;
@@ -153,15 +153,33 @@ public class ChargingStation implements FuseTreeNode {
 	public boolean isPhase1Connected() {
 		return this.phase1Connected;
 	}
-
+	public void setPhase1Connected(boolean connected) {
+		if (this.fusePhase1 > 0 && connected == false) {
+			throw new RuntimeException("Error assigning connected=false with fusePhase1=" + fusePhase1 + " greater 0"); 
+		}
+		this.phase1Connected = connected; 
+	}
+	
 	@Override
 	public boolean isPhase2Connected() {
 		return this.phase2Connected;
+	}
+	public void setPhase2Connected(boolean connected) {
+		if (this.fusePhase2 > 0 && connected == false) {
+			throw new RuntimeException("Error assigning connected=false with fusePhase2=" + fusePhase2 + " greater 0"); 
+		}
+		this.phase2Connected = connected; 
 	}
 
 	@Override
 	public boolean isPhase3Connected() {
 		return this.phase3Connected;
+	}
+	public void setPhase3Connected(boolean connected) {
+		if (this.fusePhase3 > 0 && connected == false) {
+			throw new RuntimeException("Error assigning connected=false with fusePhase3=" + fusePhase3 + " greater 0"); 
+		}
+		this.phase3Connected = connected; 
 	}
 
 	@JsonIgnore
@@ -214,9 +232,64 @@ public class ChargingStation implements FuseTreeNode {
 		return phaseToChargingStation.get(phaseGrid);
 	}
 
+	
+	/**
+	 * Checks whether a phase connected throughout the complete fuse tree.
+	 * If phase is not connected the EV does not charge on this phase.
+	 * 
+	 * Example: 
+	 * Station with 2,3,1 matching
+	 * phaseAtChargingStation 
+	 * ==> PHASE_1 or PHASE_2 or PHASE3
+	 * phaseAtGrid 
+	 * ==> PHASE_2 or PHASE_3 or PHASE_1
+	 * 
+	 * 
+	 * 
+	 * @param phaseAtChargingStation
+	 * @param phaseAtGrid
+	 * @return
+	 */
+	public boolean isPhaseAtGridConnectedInFuseTree(Phase phaseAtGrid) {
+		 
+		Phase phaseAtChargingStation = this.getPhaseGridToChargingStation(phaseAtGrid); 
+		
+		// Check whether charging station is connected on its local phase
+		if (this.isPhaseConnected(phaseAtChargingStation) == false) {
+			return false; 
+		}
+		
+		// Check the chain of parent FuseTreeNodes in the fuse tree if this phase is connected 
+		FuseTreeNode parent = this.getParent(); 
+		if (parent != null && parent.isPhaseAtGridConnectedInFuseTree(phaseAtGrid) == false) {
+			return false; 
+		}
+		
+		return true; 
+	}
+	
+	public boolean isPhaseAtStationConnectedInFuseTree(Phase phaseAtStation) {
+		
+		// Check whether charging station is connected on its local phase
+		if (this.isPhaseConnected(phaseAtStation) == false) {
+			return false; 
+		}
+		
+		Phase phaseAtGrid = this.getPhaseConsumed(phaseAtStation);
+		// Check the chain of parent fuseTreeNodes i nthe fuse tree if this phase is connected
+		FuseTreeNode parent = this.getParent(); 
+		if (parent != null && parent.isPhaseAtGridConnectedInFuseTree(phaseAtGrid) == false) {
+			return false; 
+		}
+		
+		return true; 
+	}
+	
+	
+	
 	@Override
 	public String toString() {
-		String result = "ChargingStation i" + getId() + ": 3x " + fusePhase1 + "A. ";
+		String result = "ChargingStation i" + getId() + ": " + fusePhase1 + "A/" + fusePhase2 + "A/" + fusePhase3 + "A. ";
 		if (phaseToGrid != null) {
 			result += "Matching: " + "1->" + phaseToGrid.get(Phase.PHASE_1).asInt() + "; " + "2->"
 					+ phaseToGrid.get(Phase.PHASE_2).asInt() + "; " + "3->" + phaseToGrid.get(Phase.PHASE_3).asInt()

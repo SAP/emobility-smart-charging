@@ -176,9 +176,9 @@ public class CACLA implements SimulationListener, Loggable {
 			currentStateValueApproximation[car.getId()] = critic.getValueApproximation(powerAssignment);
 			
 			// 5) Perform action
-			powerAssignment.phase1 = currentChosenAction[car.getId()].phase1;
-			powerAssignment.phase2 = currentChosenAction[car.getId()].phase2;
-			powerAssignment.phase3 = currentChosenAction[car.getId()].phase3;
+			powerAssignment.setPhase1(currentChosenAction[car.getId()].phase1);
+			powerAssignment.setPhase2(currentChosenAction[car.getId()].phase2);
+			powerAssignment.setPhase3(currentChosenAction[car.getId()].phase3);
 			
 			if (Validation.isStateValid(state, 0)==false) {
 				currentChosenAction[car.getId()].setInvalid();
@@ -194,7 +194,7 @@ public class CACLA implements SimulationListener, Loggable {
 		for (int i=0;i<statePrime.getCurrentCarAssignments().size();i++) {
 			Car car = statePrime.getCurrentCarAssignments().get(i).car;
 			PowerAssignment powerAssignment = statePrime.getCurrentPowerAssignment(car);
-			if (timestep % 1000 == 0) log(1, "timestep=" + timestep + ", car n=" + car.getId() + "; car.getMissingCapacity()=" + car.getMissingCapacity() + ", p.phase1=" + powerAssignment.phase1);
+			if (timestep % 1000 == 0) log(1, "timestep=" + timestep + ", car n=" + car.getId() + "; car.getMissingCapacity()=" + car.getMissingCapacity() + ", p.phase1=" + powerAssignment.getPhase1());
 			
 			// Called after performing action 
 			// 5) Observe reward r, new state s'

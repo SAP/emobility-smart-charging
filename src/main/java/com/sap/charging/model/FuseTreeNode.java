@@ -28,6 +28,7 @@ public interface FuseTreeNode extends JSONSerializable {
 		}
 		throw new IllegalArgumentException("unknown phase=" + phase); 
 	}
+	public boolean isPhaseAtGridConnectedInFuseTree(Phase phase); 
 	
 	public boolean isPhase1Connected(); 
 	public boolean isPhase2Connected(); 

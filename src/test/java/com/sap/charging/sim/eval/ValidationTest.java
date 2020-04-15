@@ -14,8 +14,11 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import com.sap.charging.dataGeneration.DataGenerator;
+import com.sap.charging.dataGeneration.common.DefaultDataGenerator;
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
+import com.sap.charging.model.EnergyUtil.Phase;
 import com.sap.charging.model.Fuse;
 import com.sap.charging.model.FuseTree;
 import com.sap.charging.model.FuseTreeNode;
@@ -70,7 +73,7 @@ public class ValidationTest extends SimulationUnitTest {
     }
 
     @Test
-    public void testInvalidCarAssignmentsChargingStationReused() {
+    public void testInvalidCarAssignments_AssignChargingStationTwice() {
         List<CarAssignment> carAssignments = new ArrayList<>();
         carAssignments.add(new CarAssignment(dataSim.getCars().get(0), dataSim.getChargingStations().get(0)));
         carAssignments.add(new CarAssignment(dataSim.getCars().get(1), dataSim.getChargingStations().get(0)));
@@ -84,7 +87,7 @@ public class ValidationTest extends SimulationUnitTest {
     }
 
     @Test
-    public void testInvalidCarAssignmentsDoubleCarReused() {
+    public void testInvalidCarAssignments_AssignCarTwice() {
         List<CarAssignment> carAssignments = new ArrayList<>();
         carAssignments.add(new CarAssignment(dataSim.getCars().get(0), dataSim.getChargingStations().get(0)));
         carAssignments.add(new CarAssignment(dataSim.getCars().get(0), dataSim.getChargingStations().get(1)));
@@ -115,7 +118,31 @@ public class ValidationTest extends SimulationUnitTest {
     }
 
     @Test
-    public void testInvalidPowerAssignmentsOverloadFuse() {
+    public void testValidPowerAssignment_ThreePhaseEV_SinglePhaseStation() throws PowerAssignmentException {
+    	DataGenerator data = DefaultDataGenerator.getDataGenerator_ThreePhaseEV(); 
+    	Car car = data.getCar(0); 
+    	
+    	assertEquals(3, car.sumUsedPhases, 0); 
+
+    	ChargingStation station = dataSim.getChargingStation(0); 
+    	station.fusePhase2 = 0; 
+    	station.fusePhase3 = 0; 
+    	station.setPhase2Connected(false);
+    	station.setPhase3Connected(false);
+    	
+    	assertEquals(true, station.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_1)); 
+    	assertEquals(false, station.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_2)); 
+    	assertEquals(false, station.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_3)); 
+    	
+    	
+    	List<PowerAssignment> powerAssignments = new ArrayList<>();
+    	powerAssignments.add(new PowerAssignment(station, car, 10.0, 0, 0));
+    	
+    	Validation.validateCarPowerAssignments(powerAssignments);
+    }
+    
+    @Test
+    public void testInvalidPowerAssignments_OverloadFuse() {
     	List<PowerAssignment> powerAssignments = new ArrayList<>();
     	powerAssignments.add(new PowerAssignment(dataSim.getChargingStations().get(0), dataSim.getCars().get(0), 10.0, 10.0, 10.0));
     	
@@ -163,7 +190,7 @@ public class ValidationTest extends SimulationUnitTest {
     }
 
     @Test
-    public void testInvalidPowerAssignmentsBreakCarMaxPower() {
+    public void testInvalidPowerAssignments_BreakCarMaxPower() {
         int index = 0;
         final Car car = dataSim.getCars().get(index);
         ChargingStation chargingStation = dataSim.getChargingStations().get(index);
@@ -184,7 +211,7 @@ public class ValidationTest extends SimulationUnitTest {
     }
 
     @Test
-    public void testInvalidPowerAssignmentsBreakCarMinPower() {
+    public void testInvalidPowerAssignments_BreakCarMinPower() {
         int index = 0;
         final Car car = dataSim.getCars().get(index);
         ChargingStation chargingStation = dataSim.getChargingStations().get(index);
@@ -206,7 +233,7 @@ public class ValidationTest extends SimulationUnitTest {
     }
 
     @Test
-    public void testInvalidPowerAssignmentsBreakCarPowerRatios() {
+    public void testInvalidPowerAssignments_BreakCarPowerRatios() {
         int index = 0;
         final Car car = dataSim.getCars().get(index);
         ChargingStation chargingStation = dataSim.getChargingStations().get(index);
@@ -236,6 +263,35 @@ public class ValidationTest extends SimulationUnitTest {
         }
 
     }
+    
+    
+    @Test
+    public void testInvalidPowerAssignments_NotConnected() {
+    	int index = 0;
+        final Car car = dataSim.getCars().get(index);
+        ChargingStation chargingStation = dataSim.getChargingStations().get(index);
+        
+        List<PowerAssignment> powerAssignments = new ArrayList<>();
+    	powerAssignments.add(new PowerAssignment(chargingStation, car, car.maxCurrentPerPhase, car.maxCurrentPerPhase, car.maxCurrentPerPhase));
+    	
+    	// Power assignment invalid because charging station is not connected on phase 1
+        chargingStation.fusePhase1 = 0;
+        chargingStation.fusePhase2 = 32; 
+        chargingStation.fusePhase3 = 32;  
+        chargingStation.setPhase1Connected(false);
+        chargingStation.setPhase2Connected(true);
+        chargingStation.setPhase3Connected(true);
+    	
+        try {
+            Validation.validateCarPowerAssignments(powerAssignments);
+            fail("Invalid PowerAssignment with unconnected charging stations should have failed");
+        } catch (PowerAssignmentException e) {
+            assertTrue(e.getMessage().contains("R3 (don't overload fuses) has been broken"));
+        }
+        
+
+    }
+    
 
     /***************************************
      * Fuse tree tests
@@ -274,9 +330,10 @@ public class ValidationTest extends SimulationUnitTest {
             Validation.validateFuseUsage(fuseConsumptionMap, 0);
             fail("Invalid fuse usage should have failed.");
         } catch (FuseTreeException e) {
-            assertTrue(e.getMessage().contains("Fuse indexL=0 broken"));
+            assertTrue(e.getMessage().contains("Fuse index=0 broken"));
         }
     }
+    
 
     @Test
     public void testParentNodeConsumption() {
@@ -336,6 +393,76 @@ public class ValidationTest extends SimulationUnitTest {
         FuseTree fuseTree = new FuseTree(fuseRoot, 100);
         state.fuseTree = fuseTree; 
         
+        // Check for root (before car arrival)
+        Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, 0);
+       
+        // Check for non root (before car arrival)
+        Validation.checkSummedChildConsumptionAtTimeslot(fuseParent, state, 0);
+
+        chargingStation.fusePhase1 = 200; 
+        chargingStation.fusePhase2 = 200; 
+        chargingStation.fusePhase3 = 200; 
+        
+        state.getCurrentPowerAssignment(car).setPhase1(200); 
+        //Simulation.verbosity = 3; 
+        // Invalid root (at car arrival)
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, state.currentTimeslot);
+            fail("Invalid fuse usage (root) at current timeslot (=use car plan) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
+        }
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, -1);
+            fail("Invalid fuse usage (root) at timeslot -1 (=use power assignment) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
+        }
+        
+        
+        // Invalid non root
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseParent, state, state.currentTimeslot);
+            fail("Invalid fuse usage (non root) at current timeslot (=use car plan) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
+        }
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseParent, state, -1);
+            fail("Invalid fuse usage (non root) at timeslot -1 (=use power assignment) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
+        }
+
+    }
+    
+    @Test
+    public void testCheckSummedChildConsumption_ThreePhaseEV_SinglePhaseStation() throws FuseTreeException {
+
+    	ChargingStation chargingStation = dataSim.getChargingStation(0); 
+    	chargingStation.fusePhase2 = 0; 
+    	chargingStation.fusePhase3 = 0; 
+    	chargingStation.setPhase2Connected(false);
+    	chargingStation.setPhase3Connected(false);
+    	
+    	state.currentTimeSeconds = threePhaseCar.timestampArrival.toSecondOfDay();
+    	state.currentTimeslot = TimeUtil.getTimeslotFromSeconds(state.currentTimeSeconds); 
+    	state.addCarAssignment(threePhaseCar, chargingStation); 
+    	state.addPowerAssignment(threePhaseCar, chargingStation, 
+    			threePhaseCar.maxCurrentPerPhase, 0, 0); 
+        
+    	threePhaseCar.getCurrentPlan()[state.currentTimeslot] = 200; 
+    	
+    	Fuse fuseRoot = new Fuse(0, 100);
+        Fuse fuseParent = new Fuse(1, 100);
+        fuseRoot.addChild(fuseParent);
+        Fuse fuseChild = new Fuse(2, 100);
+        fuseChild.addChild(chargingStation);
+        fuseParent.addChild(fuseChild);
+
+        FuseTree fuseTree = new FuseTree(fuseRoot, 100);
+        state.fuseTree = fuseTree; 
+        
         // Check for root
         Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, 0);
 
@@ -343,28 +470,110 @@ public class ValidationTest extends SimulationUnitTest {
         Validation.checkSummedChildConsumptionAtTimeslot(fuseParent, state, 0);
 
         chargingStation.fusePhase1 = 200; 
-        chargingStation.fusePhase2 = 200; 
-        chargingStation.fusePhase3 = 200; 
         
-        state.getCurrentPowerAssignment(car).phase1 = 200; 
+        state.getCurrentPowerAssignment(threePhaseCar).setPhase1(200); 
         //Simulation.verbosity = 3; 
         // Invalid root
         try {
             Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, state.currentTimeslot);
-            fail("Invalid fuse usage (root) should have failed.");
+            fail("Invalid fuse usage (root) at current timeslot (=use car plan) should have failed.");
         } catch (FuseTreeException e) {
-        	assertEquals(200, e.getHighestSumConsumed(), 1e-8); 
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
         }
-
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, -1);
+            fail("Invalid fuse usage (root) at timeslot -1 (=use power assignment) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
+        }
+        
         // Invalid non root
         try {
             Validation.checkSummedChildConsumptionAtTimeslot(fuseParent, state, state.currentTimeslot);
-            fail("Invalid fuse usage (non root) should have failed.");
+            fail("Invalid fuse usage (non root) at current timeslot (=use car plan) should have failed.");
         } catch (FuseTreeException e) {
-        	assertEquals(200, e.getHighestSumConsumed(), 1e-8); 
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
+        }
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseParent, state, -1);
+            fail("Invalid fuse usage (non root) at timeslot -1 (=use power assignment) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8); 
         }
 
     }
+    
+    
+    
+    @Test
+    public void testCheckSummedChildConsumption_ThreePhaseEV_SinglePhaseStation_WithPhaseRotation() throws FuseTreeException {
+
+    	ChargingStation chargingStation = dataSim.getChargingStation(0); 
+    	chargingStation.fusePhase2 = 0; 
+    	chargingStation.fusePhase3 = 0; 
+    	chargingStation.setPhase2Connected(false);
+    	chargingStation.setPhase3Connected(false);
+    	
+    	state.currentTimeSeconds = threePhaseCar.timestampArrival.toSecondOfDay();
+    	state.currentTimeslot = TimeUtil.getTimeslotFromSeconds(state.currentTimeSeconds); 
+    	state.addCarAssignment(threePhaseCar, chargingStation); 
+    	state.addPowerAssignment(threePhaseCar, chargingStation, 
+    			threePhaseCar.maxCurrentPerPhase, 0, 0); 
+        
+    	threePhaseCar.getCurrentPlan()[state.currentTimeslot] = 200; 
+    	
+    	Fuse fuseRoot = new Fuse(0, 100);
+        Fuse fuseParent = new Fuse(1, 100);
+        fuseRoot.addChild(fuseParent);
+        Fuse fuseChild = new Fuse(2, 100);
+        fuseChild.addChild(chargingStation);
+        fuseParent.addChild(fuseChild);
+
+        FuseTree fuseTree = new FuseTree(fuseRoot, 100);
+        state.fuseTree = fuseTree; 
+        
+        // Check for root
+        Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, 0);
+
+        // Check for non root
+        Validation.checkSummedChildConsumptionAtTimeslot(fuseParent, state, 0);
+
+        chargingStation.fusePhase1 = 200; 
+        
+        state.getCurrentPowerAssignment(threePhaseCar).setPhase1(200); 
+        
+        chargingStation.setPhaseMatching(Phase.PHASE_2, Phase.PHASE_3, Phase.PHASE_1);
+        // Invalid root
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, state.currentTimeslot);
+            fail("Invalid fuse usage (root) at current timeslot (=use car plan) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8); 
+        }
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, -1);
+            fail("Invalid fuse usage (root) at timeslot -1 (=use power assignment) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8); 
+        }
+        
+        chargingStation.setPhaseMatching(Phase.PHASE_3, Phase.PHASE_1, Phase.PHASE_2);
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, state.currentTimeslot);
+            fail("Invalid fuse usage (root) at current timeslot (=use car plan) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8); 
+        }
+        try {
+            Validation.checkSummedChildConsumptionAtTimeslot(fuseRoot, state, -1);
+            fail("Invalid fuse usage (root) at timeslot -1 (=use power assignment) should have failed.");
+        } catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8); 
+        }
+        
+
+    }
+    
 
     @Test
     public void testValidateFuseAtTimeslot_valid() throws FuseTreeException {
@@ -432,7 +641,167 @@ public class ValidationTest extends SimulationUnitTest {
         assertFalse(Validation.isFuseValidAtTimeslot(fuseRoot, state, state.currentTimeslot+2)); // INVALID (timeslot+2)
     }
     
+    
+    
+    @Test
+    public void testValidateFuseAtTimeslot_SinglePhaseChargingStation_NoPhaseRotation() throws FuseTreeException {
+    	Car car = dataSim.getCars().get(0);
+        ChargingStation station = dataSim.getChargingStations().get(0);
+        station.fusePhase2 = 0; 
+        station.fusePhase3 = 0; 
+        station.setPhase2Connected(false); 
+        station.setPhase3Connected(false); 
+        
+        state.currentTimeSeconds = car.timestampArrival.toSecondOfDay();
+        state.currentTimeslot = TimeUtil.getTimeslotFromSeconds(state.currentTimeSeconds); 
+    	state.addCarAssignment(car, station); 
+    	state.addPowerAssignment(car, station, 32, 0, 0); 
+        
+    	car.setCurrentPlan(new double[96]);
+    	car.getCurrentPlan()[state.currentTimeslot+1] = 32; // valid 
+    	car.getCurrentPlan()[state.currentTimeslot+2] = 200; // invalid 
+         
+    	// Uses power assignment
+    	Validation.validateFuseAtTimeslot(station, state, -1); 
+    	// Uses car assignment
+    	Validation.validateFuseAtTimeslot(station, state, state.currentTimeslot+1); 
+        
+        try {
+        	Validation.validateFuseAtTimeslot(station, state, state.currentTimeslot+2); 
+        	fail("should have failed"); 
+        }
+        catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(200-32, e.getDeltaByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8);
+        }
+    }
+    
+    @Test
+    public void testValidateFuseAtTimeslot_SinglePhaseChargingStation_WithPhaseRotation() throws FuseTreeException {
+    	Car car = dataSim.getCars().get(0);
+        ChargingStation station = dataSim.getChargingStations().get(0);
+        station.fusePhase2 = 0; 
+        station.fusePhase3 = 0; 
+        station.setPhase2Connected(false); 
+        station.setPhase3Connected(false); 
+        
+        state.currentTimeSeconds = car.timestampArrival.toSecondOfDay();
+        state.currentTimeslot = TimeUtil.getTimeslotFromSeconds(state.currentTimeSeconds); 
+    	state.addCarAssignment(car, station); 
+    	state.addPowerAssignment(car, station, 32, 0, 0); // phases at charging station
+        
+    	car.setCurrentPlan(new double[96]);
+    	car.getCurrentPlan()[state.currentTimeslot+1] = 32; // valid 
+    	car.getCurrentPlan()[state.currentTimeslot+2] = 200; // invalid 
+         
+    	// Uses power assignment
+    	Validation.validateFuseAtTimeslot(station, state, -1); 
+    	// Uses car assignment
+    	Validation.validateFuseAtTimeslot(station, state, state.currentTimeslot+1); 
+        
+    	// 2,3,1 matching
+    	station.setPhaseMatching(Phase.PHASE_2, Phase.PHASE_3, Phase.PHASE_1);
+        try {
+        	Validation.validateFuseAtTimeslot(station, state, state.currentTimeslot+2); 
+        	fail("should have failed"); 
+        }
+        catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(200-32, e.getDeltaByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8);
+        }
+        
+        // 3,1,2 matching
+    	station.setPhaseMatching(Phase.PHASE_3, Phase.PHASE_1, Phase.PHASE_2);
+        try {
+        	Validation.validateFuseAtTimeslot(station, state, state.currentTimeslot+2); 
+        	fail("should have failed"); 
+        }
+        catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(200-32, e.getDeltaByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8);
+        }
+    }
+    
+    
+    
+    @Test
+    public void testValidateFuseAtTimeslot_ThreePhaseEV_SinglePhaseFuse() throws FuseTreeException {
+    	
+    	Car car = dataSim.getCars().get(0);
+    	assertEquals(3, car.sumUsedPhases, 0); 
+        ChargingStation station = dataSim.getChargingStations().get(0);
+        station.fusePhase1 = 200; // force exception to result from fuse
+        station.fusePhase2 = 200; 
+        station.fusePhase3 = 200; 
+        
+        
+        Fuse fuseRoot = new Fuse(0, 32, 0, 0, true, false, false, new ArrayList<>());
+        fuseRoot.addChild(station);
 
+        FuseTree fuseTree = new FuseTree(fuseRoot, 100);
+        state.fuseTree = fuseTree; 
+        
+        state.currentTimeSeconds = car.timestampArrival.toSecondOfDay();
+        state.currentTimeslot = TimeUtil.getTimeslotFromSeconds(state.currentTimeSeconds); 
+    	state.addCarAssignment(car, station); 
+    	state.addPowerAssignment(car, station, 32, 0, 0); // phases at charging station
+        
+    	car.setCurrentPlan(new double[96]);
+    	car.getCurrentPlan()[state.currentTimeslot+1] = 32; // valid 
+    	car.getCurrentPlan()[state.currentTimeslot+2] = 200; // invalid 
+         
+    	// Uses power assignment
+    	Validation.validateFuseAtTimeslot(fuseRoot, state, -1); 
+    	// Uses car assignment (valid charge plan)
+    	Validation.validateFuseAtTimeslot(fuseRoot, state, state.currentTimeslot+1); 
+        
+    	// 1,2,3 matching
+    	try {
+        	Validation.validateFuseAtTimeslot(fuseRoot, state, state.currentTimeslot+2); 
+        	fail("should have failed"); 
+        }
+        catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(200-32, e.getDeltaByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8);
+        }
+    	
+    	
+    	// 2,3,1 matching
+    	station.setPhaseMatching(Phase.PHASE_2, Phase.PHASE_3, Phase.PHASE_1);
+        try {
+        	Validation.validateFuseAtTimeslot(fuseRoot, state, state.currentTimeslot+2); 
+        	fail("should have failed"); 
+        }
+        catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(200-32, e.getDeltaByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8);
+        }
+        
+        // 3,1,2 matching
+    	station.setPhaseMatching(Phase.PHASE_3, Phase.PHASE_1, Phase.PHASE_2);
+        try {
+        	Validation.validateFuseAtTimeslot(station, state, state.currentTimeslot+2); 
+        	fail("should have failed"); 
+        }
+        catch (FuseTreeException e) {
+        	assertEquals(200, e.getSumConsumedByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(200-32, e.getDeltaByPhase(Phase.PHASE_1), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_2), 1e-8);
+        	assertEquals(0, e.getSumConsumedByPhase(Phase.PHASE_3), 1e-8);
+        	
+        }
+    	
+    }
     
 }
 

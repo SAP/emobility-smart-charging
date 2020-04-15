@@ -65,36 +65,44 @@ public class Validation {
 			}*/
 			
 			String message = null;
-			if (p.phase1 > chargingStation.fusePhase1 + 1E-6 || // R3
-				p.phase2 > chargingStation.fusePhase2 + 1E-6 || 
-				p.phase3 > chargingStation.fusePhase3 + 1E-6) {
+			if (p.getPhase1() > chargingStation.fusePhase1 + 1E-6 || // R3
+				p.getPhase2() > chargingStation.fusePhase2 + 1E-6 || 
+				p.getPhase3() > chargingStation.fusePhase3 + 1E-6) {
 				message = "Validation::validateCarPowerAssignments R3 (don't overload fuses) has been broken. \n" +
-									"Validation::validateCarPowerAssignments p.phase1=" + p.phase1 + ", p.phase2=" + p.phase2 +
-									", p.phase3=" + p.phase3 + 
+									"Validation::validateCarPowerAssignments p.phase1=" + p.getPhase1() + ", p.phase2=" + p.getPhase2() +
+									", p.phase3=" + p.getPhase3() + 
 									"; chargingStation.fusePhase1=" + chargingStation.fusePhase1 + 
 									", chargingStation.fusePhase2=" + chargingStation.fusePhase2 + 
 									", chargingStation.fusePhase3=" + chargingStation.fusePhase3; 
 				
 				log(1, message);
 			}
-			if (p.phase1 > car.canLoadPhase1*car.maxCurrentPerPhase + 1E-6 || // R8
-				p.phase2 > car.canLoadPhase2*car.maxCurrentPerPhase + 1E-6 || 
-				p.phase3 > car.canLoadPhase3*car.maxCurrentPerPhase + 1E-6) {
+			if (p.getPhase1() > car.canLoadPhase1*car.maxCurrentPerPhase + 1E-6 || // R8
+				p.getPhase2() > car.canLoadPhase2*car.maxCurrentPerPhase + 1E-6 || 
+				p.getPhase3() > car.canLoadPhase3*car.maxCurrentPerPhase + 1E-6) {
 				message = "Validation::validateCarPowerAssignments R8 (max car power) has been broken. \n" + 
 						"Validation::validateCarPowerAssignments car=n" + car.getId() + " car.maxCurrentPerPhase=" + car.maxCurrentPerPhase + 
-						", assigned current p.phase1=" + p.phase1;
+						", assigned current p.phase1=" + p.getPhase1();
 				log(1, message);
 			}
-			if ((p.phase1 > 0 && p.phase1 < car.canLoadPhase1*car.minCurrentPerPhase - 1E-6) || // R9
-				(p.phase2 > 0 && p.phase2 < car.canLoadPhase2*car.minCurrentPerPhase - 1E-6) || 
-				(p.phase3 > 0 && p.phase3 < car.canLoadPhase3*car.minCurrentPerPhase - 1E-6)) {
+			if ((p.getPhase1() > 0 && p.getPhase1() < car.canLoadPhase1*car.minCurrentPerPhase - 1E-6) || // R9
+				(p.getPhase2() > 0 && p.getPhase2() < car.canLoadPhase2*car.minCurrentPerPhase - 1E-6) || 
+				(p.getPhase3() > 0 && p.getPhase3() < car.canLoadPhase3*car.minCurrentPerPhase - 1E-6)) {
 				message = "Validation::validateCarPowerAssignments R9 (min car power) has been broken. \n" + 
 						"Validation::validateCarPowerAssignments car=n" + car.getId() + " car.minCurrentPerPhase=" + car.minCurrentPerPhase + 
-						", assigned current p.phase1=" + p.phase1 + ", soc=" + car.carBattery.getSoC() + ", car=" + car.toString();
+						", assigned current p.phase1=" + p.getPhase1() + ", soc=" + car.carBattery.getSoC() + ", car=" + car.toString();
 				log(1, message);
 			}
-			if (car.canLoadPhase2*p.phase1 != car.canLoadPhase1*p.phase2 || // R6	
-				car.canLoadPhase3*p.phase1 != car.canLoadPhase1*p.phase3) { // R7
+			
+			// Phase ratio do not have to taken into account when infrastructure is not connected on a given phase
+			// Example: 3-Phase EV, 1-Phase station. EV will charge on first phase only in practice
+			
+			boolean isConnectedPhase1 = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1); 
+			boolean isConnectedPhase2 = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2); 
+			boolean isConnectedPhase3 = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3); 
+			
+			if ((car.canLoadPhase2*p.getPhase1() != car.canLoadPhase1*p.getPhase2() && isConnectedPhase1 && isConnectedPhase2) || // R6	
+				(car.canLoadPhase3*p.getPhase1() != car.canLoadPhase1*p.getPhase3() && isConnectedPhase1 && isConnectedPhase3)) { // R7
 				message = "Validation::validateCarPowerAssignments R6/R7 (phase ratios) has been broken.";
 				log(1, message);
 			}
@@ -191,7 +199,21 @@ public class Validation {
 				assignment.getCurrentPerGridPhase(timeslotToCheck) :
 				null;
 	}
-
+	
+	/**
+	 * If timeslotToCheck is below 0, the current timestamp is used (i.e. powerAssignment). If it is above 0, the car's plan is used. 
+	 * @param chargingStation
+	 * @param state
+	 * @param timeslotToCheck
+	 * @return
+	 */
+	public static double[] getCurrentPerStationPhase(ChargingStation chargingStation, State state, int timeslotToCheck) {
+		Assignment assignment = getAssignment(chargingStation, state, timeslotToCheck);
+		return (assignment != null) ? 
+				assignment.getCurrentPerStationPhase(timeslotToCheck) :
+				null;
+	}
+	
 	/**
 	 * Returns either the current car assignment (timeslot >= 0) or the current power assignment (timeslot < 0)
 	 * @param chargingStation
@@ -215,21 +237,18 @@ public class Validation {
 	public static void checkSummedChildConsumptionAtTimeslot(FuseTreeNode rootItem, State state, 
 			int timeslotToCheck) throws FuseTreeException {
 		
-		/*if (timeslotToCheck > 0) 
-			checkSummedChildConsumptionAtTimeslot++;
-		else 
-			checkSummedChildConsumption++;
-		*/
-		
 		HashMap<FuseTreeNode, double[]> fuseConsumptionMap = new HashMap<>();
 		
 		for (ChargingStation chargingStation : state.fuseTree.getListOfChargingStations()) {
-			double[] consumption = getCurrentPerGridPhase(chargingStation, state, timeslotToCheck);
-			// Should also check charging station itself, not just fuses
-			if (consumption != null && isFuseUsageValid(chargingStation, consumption) == false) {
-				throw new FuseTreeException(chargingStation, consumption, timeslotToCheck); 
+			
+			double[] consumptionAtGridPhase = getCurrentPerGridPhase(chargingStation, state, timeslotToCheck);
+			double[] consumptionAtStationPhase = getCurrentPerStationPhase(chargingStation, state, timeslotToCheck); 
+			
+			// Check the charging station
+			if (consumptionAtStationPhase != null && isFuseUsageValid(chargingStation, consumptionAtStationPhase) == false) {
+				throw new FuseTreeException(chargingStation, consumptionAtStationPhase, timeslotToCheck); 
 			}
-			updateFuseParentsConsumption(chargingStation, fuseConsumptionMap, consumption);
+			updateFuseParentsConsumption(chargingStation, fuseConsumptionMap, consumptionAtGridPhase);
 		}
 		//log(3, "Consumption at k=" + timeslotToCheck + ": " + Arrays.toString(fuseConsumptionMap.get(rootItem)));
 		validateFuseUsage(fuseConsumptionMap, timeslotToCheck);

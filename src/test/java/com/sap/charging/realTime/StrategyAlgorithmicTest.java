@@ -494,12 +494,11 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
     
     @Test
     public void fillChargingPlan_givenAChargingStationWithSmallerFuseThanMinCurrentPerPhaseOfCar_setsSlotsTo0Amps() {
-        ChargingStation station = new ChargingStation();
-        station.fusePhase1 = car1.minCurrentPerPhase - 1;
-        station.fusePhase2 = car1.minCurrentPerPhase - 1;
-        station.fusePhase3 = car1.minCurrentPerPhase - 1;
+        chargingStation1.fusePhase1 = car1.minCurrentPerPhase - 1;
+        chargingStation1.fusePhase2 = car1.minCurrentPerPhase - 1;
+        chargingStation1.fusePhase3 = car1.minCurrentPerPhase - 1;
         
-        scheduler.fillChargingPlan(car1, station, 1.0, TimeslotSorter.getSortedTimeslotsByIndex(car1.getFirstAvailableTimeslot(), 95), car1.timestampArrival.toSecondOfDay());
+        scheduler.fillChargingPlan(car1, chargingStation1, 1.0, TimeslotSorter.getSortedTimeslotsByIndex(car1.getFirstAvailableTimeslot(), 95), car1.timestampArrival.toSecondOfDay());
 
         assertEquals(car1.getCurrentPlan()[0], 0.0, 1e-8);
     }
@@ -508,12 +507,11 @@ public class StrategyAlgorithmicTest extends SimulationUnitTest {
     public void fillChargingPlan_givenAChargingStationWithSmallerFuseThanOldPlanValue_correctsOldValue() {
         car1.getCurrentPlan()[car1.getFirstAvailableTimeslot()] = 32;
 
-        ChargingStation station = new ChargingStation();
-        station.fusePhase1 = 16;
-        station.fusePhase2 = 16;
-        station.fusePhase3 = 16;
+        chargingStation1.fusePhase1 = 16;
+        chargingStation1.fusePhase2 = 16;
+        chargingStation1.fusePhase3 = 16;
         
-        scheduler.fillChargingPlan(car1, station, 1.0, TimeslotSorter.getSortedTimeslotsByIndex(car1.getFirstAvailableTimeslot(), 95), car1.timestampArrival.toSecondOfDay());
+        scheduler.fillChargingPlan(car1, chargingStation1, 1.0, TimeslotSorter.getSortedTimeslotsByIndex(car1.getFirstAvailableTimeslot(), 95), car1.timestampArrival.toSecondOfDay());
 
         assertEquals(car1.getCurrentPlan()[car1.getFirstAvailableTimeslot()], 16.0, 1e-8);
     }

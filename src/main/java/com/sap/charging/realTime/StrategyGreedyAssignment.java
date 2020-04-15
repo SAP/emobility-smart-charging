@@ -5,6 +5,7 @@ import java.util.List;
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
 import com.sap.charging.model.EnergyPriceHistory;
+import com.sap.charging.model.EnergyUtil.Phase;
 import com.sap.charging.realTime.model.CarAssignment;
 import com.sap.charging.realTime.model.PowerAssignment;
 import com.sap.charging.sim.eval.Validation;
@@ -47,20 +48,24 @@ public class StrategyGreedyAssignment extends Strategy {
 		state.addCarAssignment(newCar, chargingStation);
 		
 		
+		// Check whether each phase is connected throughout the fuse tree
+		boolean phase1ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1); 
+		boolean phase2ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2); 
+		boolean phase3ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3); 
+				
+		double phase1 = phase1ConnectedInFuseTree ? newCar.canLoadPhase1*Math.min(newCar.maxCurrentPerPhase, chargingStation.fusePhase1): 0; 
+		double phase2 = phase2ConnectedInFuseTree ? newCar.canLoadPhase2*Math.min(newCar.maxCurrentPerPhase, chargingStation.fusePhase2): 0; 
+		double phase3 = phase3ConnectedInFuseTree ? newCar.canLoadPhase3*Math.min(newCar.maxCurrentPerPhase, chargingStation.fusePhase3): 0; 
+		
+		
 		// Assign power consumption
 		PowerAssignment powerAssignment = state.addPowerAssignment(newCar, chargingStation, 
-				Math.min(chargingStation.fusePhase1, 
-						 newCar.canLoadPhase1 * newCar.maxCurrentPerPhase), 
-				Math.min(chargingStation.fusePhase2, 
-						 newCar.canLoadPhase2 * newCar.maxCurrentPerPhase), 
-				Math.min(chargingStation.fusePhase3,
-						 newCar.canLoadPhase3 * newCar.maxCurrentPerPhase) 
-				);
+				phase1, phase2, phase3); 
 		
 		if (Validation.isFuseTreeValid(state) == false) {
-			powerAssignment.phase1 = 0;
-			powerAssignment.phase2 = 0;
-			powerAssignment.phase3 = 0;
+			powerAssignment.setPhase1(0);
+			powerAssignment.setPhase2(0);
+			powerAssignment.setPhase3(0);
 		}
 		
 	}

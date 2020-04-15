@@ -6,6 +6,7 @@ import static com.sap.charging.util.JSONKeys.JSON_KEY_VARIABLES;
 import static com.sap.charging.util.JSONKeys.JSON_KEY_VARIABLE_NAME;
 import static com.sap.charging.util.JSONKeys.JSON_KEY_VARIABLE_VALUE;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -26,6 +27,7 @@ import com.sap.charging.dataGeneration.DataGeneratorRandom;
 import com.sap.charging.dataGeneration.common.DefaultDataGenerator;
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
+import com.sap.charging.model.EnergyUtil.Phase;
 import com.sap.charging.opt.CONSTANTS;
 import com.sap.charging.opt.heuristics.InstanceHeuristicAbsSoCLP;
 import com.sap.charging.opt.lp.InstanceLP;
@@ -34,6 +36,7 @@ import com.sap.charging.realTime.StrategyAlgorithmic;
 import com.sap.charging.realTime.StrategyFromDayahead;
 import com.sap.charging.realTime.StrategyGreedy;
 import com.sap.charging.realTime.model.CarAssignment;
+import com.sap.charging.realTime.model.PowerAssignment;
 import com.sap.charging.sim.common.SimulationUnitTest;
 import com.sap.charging.sim.common.StrategyMock;
 import com.sap.charging.sim.event.Event;
@@ -246,8 +249,109 @@ public class SimulationTest extends SimulationUnitTest {
 		double expectedAmountCharged2 = 2*expectedAmountCharged1;
 		assertEquals(expectedAmountCharged2, car.getChargedCapacity(), 1E-8);
 		
+	}
+
+	@Test
+	public void testSimulateNextStep_ThreePhaseEV_SinglePhaseStation() {
+		DataGenerator data = DefaultDataGenerator.getDataGenerator_ThreePhaseEV(); 
+		
+		ChargingStation station = data.getChargingStation(0); 
+		station.fusePhase2 = 0; 
+		station.fusePhase3 = 0; 
+		station.setPhase2Connected(false);
+		station.setPhase3Connected(false);
+		
+		assertTrue(station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1)); 
+		assertFalse(station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2)); 
+		assertFalse(station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3)); 
+		
+		Car car = data.getCar(0); 
+		assertEquals(1, car.canLoadPhase1, 0); 
+		assertEquals(1, car.canLoadPhase2, 0);
+		assertEquals(1, car.canLoadPhase3, 0); 
+		
+		Simulation sim = new Simulation(data, new StrategyAlgorithmic()); 
+		sim.init(); 
+		
+		// Loop to start of first car
+		for (int t=0;t<car.timestampArrival.toSecondOfDay();t++) {
+			sim.simulateNextStep();
+		}
+		
+		// Should be ok, power assignment on only one phase (validation should not throw exception)
+		sim.simulateNextStep(); 
+		
+		PowerAssignment powerAssignment = sim.getState().getCurrentPowerAssignment(car); 
+		assertNotNull(powerAssignment); 
+		assertEquals(32, powerAssignment.getPhase1(), 0); 
+		assertEquals(0, powerAssignment.getPhase2(), 0); 
+		assertEquals(0, powerAssignment.getPhase3(), 0); 
+		
+		double[] consumption = powerAssignment.getCurrentPerGridPhase(-1); 
+		assertEquals(32, consumption[0], 0); 
+		assertEquals(0, consumption[1], 0); 
+		assertEquals(0, consumption[2], 0); 
+		
+		
+		CarAssignment carAssignment = sim.getState().getCurrentCarAssignment(car); 
+		consumption = carAssignment.getCurrentPerGridPhase(sim.getState().currentTimeslot); 
+		assertEquals(32, consumption[0], 0); 
+		assertEquals(0, consumption[1], 0); 
+		assertEquals(0, consumption[2], 0); 
 		
 	}
+	
+	@Test
+	public void testSimulateNextStep_ThreePhaseEV_SinglePhaseStation_WithPhaseRotation() {
+		DataGenerator data = DefaultDataGenerator.getDataGenerator_ThreePhaseEV(); 
+		
+		ChargingStation station = data.getChargingStation(0); 
+		station.fusePhase2 = 0; 
+		station.fusePhase3 = 0; 
+		station.setPhase2Connected(false);
+		station.setPhase3Connected(false);
+		station.setPhaseMatching(Phase.PHASE_2, Phase.PHASE_3, Phase.PHASE_1);
+		
+		assertTrue(station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1)); 
+		assertFalse(station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2)); 
+		assertFalse(station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3)); 
+		
+		Car car = data.getCar(0); 
+		assertEquals(1, car.canLoadPhase1, 0); 
+		assertEquals(1, car.canLoadPhase2, 0);
+		assertEquals(1, car.canLoadPhase3, 0); 
+		
+		Simulation sim = new Simulation(data, new StrategyAlgorithmic()); 
+		sim.init(); 
+		
+		// Loop to start of first car
+		for (int t=0;t<car.timestampArrival.toSecondOfDay();t++) {
+			sim.simulateNextStep();
+		}
+		
+		// Should be ok, power assignment on only one phase (validation should not throw exception)
+		sim.simulateNextStep(); 
+		
+		PowerAssignment powerAssignment = sim.getState().getCurrentPowerAssignment(car); 
+		assertNotNull(powerAssignment); 
+		System.out.println(powerAssignment);
+		assertEquals(32, powerAssignment.getPhase1(), 0); 
+		assertEquals(0, powerAssignment.getPhase2(), 0); 
+		assertEquals(0, powerAssignment.getPhase3(), 0); 
+		
+		double[] consumption = powerAssignment.getCurrentPerGridPhase(-1); 
+		assertEquals(0, consumption[0], 0); 
+		assertEquals(32, consumption[1], 0); 
+		assertEquals(0, consumption[2], 0); 
+		
+		
+		CarAssignment carAssignment = sim.getState().getCurrentCarAssignment(car); 
+		consumption = carAssignment.getCurrentPerGridPhase(sim.getState().currentTimeslot); 
+		assertEquals(0, consumption[0], 0); 
+		assertEquals(32, consumption[1], 0); 
+		assertEquals(0, consumption[2], 0); 
+	}
+	
 	
 	@Test
 	public void testSimulationResultExportJSON() {
