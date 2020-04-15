@@ -1,5 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { OptimizeChargingProfilesRequest } from 'src/assets/server_types';
+import { Utils } from '../utils/Utils';
 
 @Component({
   selector: 'app-request-json-component',
@@ -14,6 +15,11 @@ export class RequestJsonComponentComponent implements OnInit {
 
     ngOnInit() {
         
+    }
+
+    onClickDownloadApiRequest(): void {
+        const content = JSON.stringify(this.restApiRequest, null, 4); 
+        Utils.createFileDownload("apiRequest.json", content); 
     }
 
 }

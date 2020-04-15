@@ -6,9 +6,16 @@
     <form class="formEditDialog">
         <p>Power rating (kW): {{getPowerW() / 1000}}</p>
         <mat-form-field appearance="outline" class="inputEditDialog">
-            <mat-label>Current limit per phase (ampere)</mat-label>
-            <input name="inputFuse" type="number" matInput placeholder="Ampere" [(ngModel)]="data.fuseTreeNode['fusePhase1']"
-                (change)="onChangeFuse()">
+            <mat-label>Current limit phase 1 (ampere)</mat-label>
+            <input name="inputFuse" type="number" matInput placeholder="Phase 1 (ampere)" [(ngModel)]="data.fuseTreeNode['fusePhase1']">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="inputEditDialog">
+            <mat-label>Current limit phase 2 (ampere)</mat-label>
+            <input name="inputFuse" type="number" matInput placeholder="Phase 2 (ampere)" [(ngModel)]="data.fuseTreeNode['fusePhase2']">
+        </mat-form-field>
+        <mat-form-field appearance="outline" class="inputEditDialog">
+            <mat-label>Current limit phase 3 (ampere)</mat-label>
+            <input name="inputFuse" type="number" matInput placeholder="Phase 3 (ampere)" [(ngModel)]="data.fuseTreeNode['fusePhase3']">
         </mat-form-field>
 
         <div *ngIf="data.fuseTreeNode['@type']==='ChargingStation'">

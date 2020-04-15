@@ -59,6 +59,10 @@ export class FuseTreeComponentComponent implements OnInit {
         return Utils.toHH_MM(timestamp);
     }
 
+    getCarPowerLabel(): string {
+        return Utils.getCarLabel(this.getAssignedCar()); 
+    }
+
     ngOnInit() {
 
     }
@@ -128,10 +132,6 @@ export class EditFuseTreeComponentDialog {
             appParent: AppComponent
         }) { }
 
-    onChangeFuse(): void {
-        this.data.fuseTreeNode["fusePhase2"] = this.data.fuseTreeNode["fusePhase1"];
-        this.data.fuseTreeNode["fusePhase3"] = this.data.fuseTreeNode["fusePhase1"];
-    }
 
     getPowerW(): number {
         return Utils.getFusePowerLimitW(this.data.fuseTreeNode);

@@ -30,10 +30,10 @@
             *ngIf="fuseTreeNode['@type']==='ChargingStation' && getAssignedCar() !== null">
             <mat-icon>directions_car</mat-icon>
             <span>
-                Car (id={{getAssignedCar().id}}
+                Car (id={{getAssignedCar().id}}): {{getCarPowerLabel()}}
             </span>
             <span [class.invalidValue]="isTimestampArrivalValid() === false">
-                , arrival: {{toHH_MM(getAssignedCar().timestampArrival)}})
+                , arrival: {{toHH_MM(getAssignedCar().timestampArrival)}}
             </span>
 
             <button mat-raised-button (click)="onClickEditCar(getAssignedCar())"
