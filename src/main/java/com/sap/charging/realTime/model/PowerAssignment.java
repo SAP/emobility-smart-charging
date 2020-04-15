@@ -31,21 +31,11 @@ public class PowerAssignment extends Assignment {
 		}
 	}
 	
-	public double[] getCurrentPerGridPhase(int timeslot) {
-		double[] currentAtGrid = new double[3];
-		
-		// Get actual phase 1 consumption 
-		// Which phase is the grid phase 1 at the charging station?
-		Phase phase1ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_1);
-		Phase phase2ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_2);
-		Phase phase3ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_3);
-		
-		currentAtGrid[0] = getPhaseByInt(phase1ChargingStation.asInt());
-		currentAtGrid[1] = getPhaseByInt(phase2ChargingStation.asInt());
-		currentAtGrid[2] = getPhaseByInt(phase3ChargingStation.asInt());
-		
-		return currentAtGrid;
+	@Override
+	public double getCurrentByPhase(Phase phase, int timeslot) {
+		return getPhaseByInt(phase.asInt()); 
 	}
+	
 	
 	@Override
 	public String toString() {
