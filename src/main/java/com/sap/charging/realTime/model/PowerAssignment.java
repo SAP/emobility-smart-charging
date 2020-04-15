@@ -32,7 +32,7 @@ public class PowerAssignment extends Assignment {
 	}
 	
 	@Override
-	public double getCurrentByPhaseAtGrid(Phase phaseAtGrid, int timeslot) {
+	public double getCarCurrentByPhaseAtGrid(Phase phaseAtGrid, int timeslot) {
 		return getPhaseByInt(phaseAtGrid.asInt()); 
 	}
 	
