@@ -49,7 +49,7 @@ public class CarAssignment extends Assignment {
 	}
 	
 	@Override
-	public double getCurrentByPhaseAtGrid(Phase phase, int timeslot) {
+	public double getCarCurrentByPhaseAtGrid(Phase phase, int timeslot) {
 		double currentPlanned = car.getCurrentPlan()[timeslot];
 		
 		// Example: Car with 16A~1
