@@ -17,10 +17,12 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
+import com.sap.charging.model.EnergyUtil.Phase;
 import com.sap.charging.model.Fuse;
 import com.sap.charging.model.FuseTree;
 import com.sap.charging.realTime.State;
 import com.sap.charging.realTime.StrategyAlgorithmic;
+import com.sap.charging.realTime.StrategyAlgorithmicChargeScheduler;
 import com.sap.charging.realTime.model.CarAssignment;
 import com.sap.charging.realTime.model.CarAssignmentStore;
 import com.sap.charging.realTime.model.forecasting.departure.CarDepartureOracle;
@@ -145,11 +147,8 @@ public class StateStoreTest extends SimulationUnitTest {
 		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
 		StateStore stateStore = request.state; 
 		
-		
 		State state = stateStore.toState(); 
 		
-		
-    	Simulation.verbosity = 0; 
 		strategy.reactReoptimize(state);
 		Car car = state.getCar(0); 
 		
@@ -158,6 +157,69 @@ public class StateStoreTest extends SimulationUnitTest {
 		}
 	}
 	
+	
+	@Test
+	public void test_OptimizeState_ThreePhaseCar_SinglePhaseStation() throws JsonMappingException, JsonProcessingException {
+		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_ThreePhaseCar_SinglePhaseStation.json"); 
+		
+		ObjectMapper objectMapper = new ObjectMapper();
+		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
+		StateStore stateStore = request.state; 
+		
+		State state = stateStore.toState(); 
+		
+    	Simulation.verbosity = 0; 
+		strategy.reactReoptimize(state);
+		Car car = state.getCar(0); 
+		ChargingStation station = state.getChargingStation(0); 
+		
+		assertEquals(3, car.sumUsedPhases, 0); 
+		
+		StrategyAlgorithmicChargeScheduler scheduler = strategy.getScheduler(); 
+		assertEquals(1, scheduler.getSumUsedPhases(station, car), 0); 
+		
+		// Should be fully planned
+		double desiredCapacity = car.getMissingCapacity(); 
+		double plannedCapacity = scheduler.getPlannedCapacity(station, car, state.currentTimeSeconds);
+		assertEquals(desiredCapacity, plannedCapacity, 1e-8); 
+		
+	}
+	
+	@Test
+	public void test_OptimizeState_ThreePhaseCar_SinglePhaseStationWithPhaseRotation() throws JsonMappingException, JsonProcessingException {
+		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_ThreePhaseCar_SinglePhaseStationWithPhaseRotation.json"); 
+		
+		ObjectMapper objectMapper = new ObjectMapper();
+		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
+		StateStore stateStore = request.state; 
+		
+		State state = stateStore.toState(); 
+		
+    	Simulation.verbosity = 0; 
+		strategy.reactReoptimize(state);
+		Car car = state.getCar(0); 
+		ChargingStation station = state.getChargingStation(0); 
+		
+		assertEquals(3, car.sumUsedPhases, 0); 
+		
+		assertEquals(true, station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1));
+		assertEquals(false, station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2));
+		assertEquals(false, station.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3));
+		
+		assertEquals(false, station.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_1));
+		assertEquals(true, station.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_2));
+		assertEquals(false, station.isPhaseAtGridConnectedInFuseTree(Phase.PHASE_3));
+		
+		
+		StrategyAlgorithmicChargeScheduler scheduler = strategy.getScheduler(); 
+		assertEquals(1, scheduler.getSumUsedPhases(station, car), 0); 
+		
+		// Should be fully planned
+		double desiredCapacity = car.getMissingCapacity(); 
+		double plannedCapacity = scheduler.getPlannedCapacity(station, car, state.currentTimeSeconds);
+		assertEquals(desiredCapacity, plannedCapacity, 1e-8); 
+		
+	}
 	
 	@Test
 	public void test_FuseTree_And_ChargingStations_Passed_ShouldError() {

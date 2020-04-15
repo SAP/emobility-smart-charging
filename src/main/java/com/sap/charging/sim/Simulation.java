@@ -14,6 +14,7 @@ import com.sap.charging.model.ChargingStation;
 import com.sap.charging.model.EnergyUtil;
 import com.sap.charging.model.Fuse;
 import com.sap.charging.model.FuseTreeNode;
+import com.sap.charging.model.EnergyUtil.Phase;
 import com.sap.charging.opt.CONSTANTS;
 import com.sap.charging.opt.util.MethodTimer;
 import com.sap.charging.opt.util.MethodTimerState;
@@ -390,9 +391,6 @@ public class Simulation implements Loggable {
 		}
 	}
 	
-	/*private boolean isStartOfTimeslot(int t) {
-		return t % 15*60 == 0;
-	}*/
 	
 	private void updateStatePowerAssignmentsFromPlan() {
 
@@ -402,12 +400,13 @@ public class Simulation implements Loggable {
 
 			if (car.isFullyCharged() == false) {
 				int k = state.currentTimeslot;
+
 				// How much current will the car use at k? If nonlinear charging is active, 
 				// car may decide based on exponential function (based on CV phase in CCCV)
 				
 				// First check if a plan exists. If no plan exists, use infrastructure/car maximums 
 				double plannedCurrent = (car.getCurrentPlan() != null) ? 
-						Math.max(0, car.getCurrentPlan()[k]) : // plans are initialized at all slots with -1. This is obviously not the current to be assigned
+						Math.max(0, car.getCurrentPlan()[k]) : // plans may be initialized at all slots with -1. This is obviously not the current to be assigned
 						Math.min(car.sumUsedPhases * chargingStation.fusePhase1, car.sumUsedPhases * car.maxCurrentPerPhase);
 						
 				// Next use this as input for (potential) nonlinear charging, the constant current in CCCV
@@ -415,17 +414,24 @@ public class Simulation implements Loggable {
 						car.carBattery.batterySim.getCurrentBasedOnSoC(car.carBattery.getSoC(), plannedCurrent*car.sumUsedPhases) : 
 						plannedCurrent * car.sumUsedPhases;
 
+						
+				// Check whether each phase is connected throughout the fuse tree
+				boolean phase1ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_1); 
+				boolean phase2ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_2); 
+				boolean phase3ConnectedInFuseTree = chargingStation.isPhaseAtStationConnectedInFuseTree(Phase.PHASE_3); 
+						
+				double phase1 = phase1ConnectedInFuseTree ? car.canLoadPhase1*maxBatteryCurrent/car.sumUsedPhases : 0; 
+				double phase2 = phase2ConnectedInFuseTree ? car.canLoadPhase2*maxBatteryCurrent/car.sumUsedPhases : 0; 
+				double phase3 = phase3ConnectedInFuseTree ? car.canLoadPhase3*maxBatteryCurrent/car.sumUsedPhases : 0; 
+				
 				if (state.isCarPowerAssigned(car)) {
 					PowerAssignment powerAssignment = state.getCurrentPowerAssignment(car);
-					powerAssignment.phase1 = car.canLoadPhase1*maxBatteryCurrent/car.sumUsedPhases;
-					powerAssignment.phase2 = car.canLoadPhase2*maxBatteryCurrent/car.sumUsedPhases;
-					powerAssignment.phase3 = car.canLoadPhase3*maxBatteryCurrent/car.sumUsedPhases;
+					powerAssignment.setPhase1(phase1);
+					powerAssignment.setPhase2(phase2);
+					powerAssignment.setPhase3(phase3);
 				}
 				else {
-					state.addPowerAssignment(car, chargingStation, 
-							car.canLoadPhase1*maxBatteryCurrent/car.sumUsedPhases, 
-							car.canLoadPhase2*maxBatteryCurrent/car.sumUsedPhases, 
-							car.canLoadPhase3*maxBatteryCurrent/car.sumUsedPhases);
+					state.addPowerAssignment(car, chargingStation, phase1, phase2, phase3);
 				}
 			}
 			
@@ -445,7 +451,7 @@ public class Simulation implements Loggable {
 		// Add currentCapacity of cars
 		Car car = powerAssignment.car;
 		ChargingStation chargingStation = powerAssignment.chargingStation;
-		car.addChargedCapacity(1, powerAssignment.phase1 + powerAssignment.phase2 + powerAssignment.phase3);
+		car.addChargedCapacity(1, powerAssignment.getPhase1() + powerAssignment.getPhase2() + powerAssignment.getPhase3());
 		//System.out.println("chargedCapacity: " + (car.getChargedCapacity()-startChargedCapacity));
 		// If any are full, add event for car finished on next second (t+1)
 		// ==> car stops charging

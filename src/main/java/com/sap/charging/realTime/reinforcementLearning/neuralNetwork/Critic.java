@@ -73,11 +73,11 @@ public class Critic extends NeuralNetwork {
 		ChargingStation chargingStation = powerAssignment.chargingStation;
 		double maxPower = Math.min(chargingStation.fusePhase1, car.maxCurrentPerPhase);
 		// How far is assigned power over allowed power limit?
-		double overLimit = Math.max(0, powerAssignment.phase1 - maxPower); 
+		double overLimit = Math.max(0, powerAssignment.getPhase1() - maxPower); 
 		
 		// How far is assigned power under allowed power limit
-		double underLimit = (powerAssignment.phase1 == 0) ? 0 :
-							Math.max(0, car.minCurrentPerPhase - powerAssignment.phase1);
+		double underLimit = (powerAssignment.getPhase1() == 0) ? 0 :
+							Math.max(0, car.minCurrentPerPhase - powerAssignment.getPhase1());
 		
 		double[] data = new double[]{
 				// Static parameters
@@ -95,9 +95,9 @@ public class Critic extends NeuralNetwork {
 				car.getMissingCapacity()
 				
 				// Action
-				, powerAssignment.phase1,
-				powerAssignment.phase2,
-				powerAssignment.phase3
+				, powerAssignment.getPhase1(),
+				powerAssignment.getPhase2(),
+				powerAssignment.getPhase3()
 				
 				// Will introduce later
 				//, car.isImmediateStartNeeded() ? 1 : 0

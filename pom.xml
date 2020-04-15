@@ -59,7 +59,7 @@
 				<artifactId>maven-surefire-plugin</artifactId>
 				<configuration>
 					<reuseForks>false</reuseForks>
-					<forkCount>15</forkCount>
+					<forkCount>0</forkCount>
 					<trimStackTrace>true</trimStackTrace>
 				</configuration>
 			</plugin>

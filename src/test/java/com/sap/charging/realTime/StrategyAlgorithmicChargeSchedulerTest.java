@@ -2,6 +2,7 @@ package com.sap.charging.realTime;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -77,16 +78,45 @@ public class StrategyAlgorithmicChargeSchedulerTest {
 	@Test
 	public void testGetPlannedCapacity_Linear() {
 		
-		
 		// Linear scheduler
-		assertEquals(car.sumUsedPhases*900.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, schedulerLinear.getPlannedCapacityLinear(car, 0, 900), 1e-8);
-		assertEquals(car.sumUsedPhases*600.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, schedulerLinear.getPlannedCapacityLinear(car, 300, 900), 1e-8);
-		assertEquals(car.sumUsedPhases*600.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, schedulerLinear.getPlannedCapacityLinear(car,0, 600), 1e-8);
-		assertEquals(car.sumUsedPhases*300.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, schedulerLinear.getPlannedCapacityLinear(car, 300, 600), 1e-8);
-		assertEquals(car.sumUsedPhases*1200.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, schedulerLinear.getPlannedCapacityLinear(car, 300, 1500), 1e-8);
-		
+		assertEquals(car.sumUsedPhases*900.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 0, 900), 1e-8);
+		assertEquals(car.sumUsedPhases*600.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 300, 900), 1e-8);
+		assertEquals(car.sumUsedPhases*600.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car,0, 600), 1e-8);
+		assertEquals(car.sumUsedPhases*300.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 300, 600), 1e-8);
+		assertEquals(car.sumUsedPhases*1200.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 300, 1500), 1e-8);
 	
 	}
+	
+	@Test
+	public void testGetPlannedCapacity_Linear_StationNotConnected() {
+		
+		assertEquals(3, car.sumUsedPhases, 0); 
+		
+		chargingStation.fusePhase2 = 0; 
+		chargingStation.fusePhase3 = 0; 
+		chargingStation.setPhase2Connected(false);
+		chargingStation.setPhase3Connected(false);
+		
+		// Linear scheduler
+		assertEquals(900.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 0, 900), 1e-8);
+		assertEquals(600.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 300, 900), 1e-8);
+		assertEquals(600.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car,0, 600), 1e-8);
+		assertEquals(300.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 300, 600), 1e-8);
+		assertEquals(1200.0/3600*chargePlan[0]*CONSTANTS.CHARGING_EFFICIENCY, 
+				schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 300, 1500), 1e-8);
+	
+	}
+	
+	
 	
 	@Test
 	public void testGetPlannedCapacity_Linear_Interval() {
@@ -133,11 +163,45 @@ public class StrategyAlgorithmicChargeSchedulerTest {
 	public void testGetPlannedCapacity_ChargePlanEmpty() {
 		car.setCurrentPlan(new double[96]);
 		
-		assertEquals(0, schedulerLinear.getPlannedCapacityLinear(car, 0, 86400), 0);
+		assertEquals(0, schedulerLinear.getPlannedCapacityLinear(chargingStation, car, 0, 86400), 0);
 		assertEquals(0, schedulerNonlinear.getPlannedCapacityNonlinear(chargingStation, car, 0, 0, 86400), 0);
 		
 	}
 	
+	
+	@Test
+	public void testGetSumUsedPhases() {
+		assertEquals(3, car.sumUsedPhases, 0); 
+		assertEquals(3, schedulerLinear.getSumUsedPhases(chargingStation, car), 0); 
+		
+		chargingStation.fusePhase2 = 0; 
+		chargingStation.setPhase2Connected(false);
+		
+		assertEquals(2, schedulerLinear.getSumUsedPhases(chargingStation, car), 0); 
+		
+		chargingStation.fusePhase3 = 0; 
+		chargingStation.setPhase3Connected(false);
+		
+		assertEquals(1, schedulerLinear.getSumUsedPhases(chargingStation, car), 0); 
+		
+	}
+	
+	@Test
+	public void testGetSumUsedPhases_CarUnableToChargeException() {
+		
+		chargingStation.fusePhase1 = 0; 
+		chargingStation.setPhase1Connected(false);
+		chargingStation.fusePhase2 = 0; 
+		chargingStation.setPhase2Connected(false);
+		chargingStation.fusePhase3 = 0; 
+		chargingStation.setPhase3Connected(false);
+		
+		try {
+			schedulerLinear.getSumUsedPhases(chargingStation, car); 
+			fail("Should have failed if EV can't charge"); 
+		} catch (Exception e) {}
+		
+	}
 	
 	@Test
 	public void testGetCurrentToFillTimeslot_linear_() {
@@ -165,17 +229,47 @@ public class StrategyAlgorithmicChargeSchedulerTest {
 	public void testFillChargingPlan_Linear() {
 		car.setCurrentPlan(new double[96]);
 		double desiredCapacity = car.getMissingCapacity();
+		int currentTimeSeconds = 300; 
 		
 		schedulerLinear.fillChargingPlan(car, chargingStation, desiredCapacity, 
 				TimeslotSorter.getSortedTimeslots(null, 0, 95, TimeslotSortingCriteria.INDEX), 
-				300);
+				currentTimeSeconds);
 		
 		assertEquals(32, car.getCurrentPlan()[0], 0);
 		assertEquals(32, car.getCurrentPlan()[1], 0);
 		assertEquals(32, car.getCurrentPlan()[2], 0);
 		
-		//System.out.println(Arrays.toString(car.getCurrentPlan()));
+		double plannedCapacity = schedulerLinear.getPlannedCapacity(chargingStation, car, currentTimeSeconds); 
+		assertEquals(desiredCapacity, plannedCapacity, 1e-8); 		
+		
 	}
+	
+	@Test
+	public void testFillChargingPlan_Linear_StationNotConnected() {
+		assertEquals(3, car.sumUsedPhases, 0); 
+		
+		int currentTimeSeconds = 300; 
+		chargingStation.fusePhase2 = 0; 
+		chargingStation.fusePhase3 = 0; 
+		chargingStation.setPhase2Connected(false); 
+		chargingStation.setPhase3Connected(false); 
+		
+		car.setCurrentPlan(new double[96]);
+		double desiredCapacity = car.getMissingCapacity();
+		
+		schedulerLinear.fillChargingPlan(car, chargingStation, desiredCapacity, 
+				TimeslotSorter.getSortedTimeslots(null, 0, 95, TimeslotSortingCriteria.INDEX), 
+				currentTimeSeconds);
+		
+		assertEquals(32, car.getCurrentPlan()[0], 0);
+		assertEquals(32, car.getCurrentPlan()[1], 0);
+		assertEquals(32, car.getCurrentPlan()[2], 0);
+		
+		double plannedCapacity = schedulerLinear.getPlannedCapacity(chargingStation, car, currentTimeSeconds); 
+		assertEquals(desiredCapacity, plannedCapacity, 1e-8); 		
+		
+	}
+	
 	
 	@Test
 	public void testFillChargingPlan_Linear_ExistingPlan() {

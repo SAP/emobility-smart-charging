@@ -1,2 +1,6 @@
 <ngx-json-view [data]="restApiRequest" [levelOpen]="3"></ngx-json-view>
-
+<br>
+<button mat-button mat-raised-button (click)="onClickDownloadApiRequest()">
+    <mat-icon>save_alt</mat-icon>
+    Save API request as JSON
+</button>

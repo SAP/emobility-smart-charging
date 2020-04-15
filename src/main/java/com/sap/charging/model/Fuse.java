@@ -124,6 +124,23 @@ public class Fuse implements FuseTreeNode {
 		return this.phase3Connected; 
 	}
 	
+	@Override
+	public boolean isPhaseAtGridConnectedInFuseTree(Phase phaseAtGrid) {
+		if (this.isPhaseConnected(phaseAtGrid) == false) {
+			return false; 
+		}
+		
+		FuseTreeNode parent = this.getParent(); 
+		while (parent != null) {
+			if (parent.isPhaseConnected(phaseAtGrid) == false) {
+				return false; 
+			}
+			parent = parent.getParent(); 
+		}
+		return true; 
+	}
+	
+	
 	/**
 	 * 
 	 * @param child Can be a fuse or a ChargingStation

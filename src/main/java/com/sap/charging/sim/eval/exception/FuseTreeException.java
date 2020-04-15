@@ -15,7 +15,7 @@ public class FuseTreeException extends ValidationException {
 	public final int timeslot;
 	
 	public FuseTreeException(FuseTreeNode fuse, double[] sumConsumed, int timeslot) {
-		super("Fuse indexL=" + fuse.getId() + " broken at k=" + timeslot + ": " + 
+		super(fuse.getClass().getSimpleName() + " index=" + fuse.getId() + " broken at k=" + timeslot + ": " + 
 				"p1: " + Util.formatDouble(sumConsumed[0]) + "A/" + Util.formatDouble(fuse.getFusePhase(Phase.PHASE_1)) + "A (delta=" + Util.formatDouble(sumConsumed[0]-fuse.getFusePhase(Phase.PHASE_1)) + "A), " +
 				"p2: " + Util.formatDouble(sumConsumed[1]) + "A/" + Util.formatDouble(fuse.getFusePhase(Phase.PHASE_2)) + "A (delta=" + Util.formatDouble(sumConsumed[1]-fuse.getFusePhase(Phase.PHASE_2)) + "A), " +
 				"p3: " + Util.formatDouble(sumConsumed[2]) + "A/" + Util.formatDouble(fuse.getFusePhase(Phase.PHASE_3)) + "A (delta=" + Util.formatDouble(sumConsumed[2]-fuse.getFusePhase(Phase.PHASE_3)) + "A)");
