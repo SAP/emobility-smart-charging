@@ -48,36 +48,21 @@ public class CarAssignment extends Assignment {
 		return TimeUtil.getTimeslotFromSeconds(getExpectedDepartureTimeSeconds());
 	}
 	
-	private double[] getCurrentArray() {
-		return new double[3];
-	}
-	
-	private void calculateCurrentArray(double[] currentArray, double currentPlanned, Phase phase1ChargingStation, Phase phase2ChargingStation, Phase phase3ChargingStation) {
-		currentArray[0] = car.canLoadPhase(phase1ChargingStation.asInt()) * currentPlanned;
-		currentArray[1] = car.canLoadPhase(phase2ChargingStation.asInt()) * currentPlanned;
-		currentArray[2] = car.canLoadPhase(phase3ChargingStation.asInt()) * currentPlanned;
-	}
-	
-	public double[] getCurrentPerGridPhase(int timeslot) {
-		double[] currentAtGrid = getCurrentArray();
+	@Override
+	public double getCurrentByPhaseAtGrid(Phase phase, int timeslot) {
 		double currentPlanned = car.getCurrentPlan()[timeslot];
 		
-		// Get actual phase 1 consumption 
-		// Which phase is the grid phase 1 at the charging station?
+		// Example: Car with 16A~1
+		// Station with 2,3,1 matching 
+		// Phase: Which phase is the grid phase 1 at the charging station?
+		// --> Phase is 2 here
 		
-		// Example: 
-		// EV with 16A~1
-		// Station with 2,3,1 matching ==> 1st phase on station matches 2nd phase of grid
-		// Result array: [0, 16, 0]
-		
-		Phase phase1ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_1);
-		Phase phase2ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_2);
-		Phase phase3ChargingStation = chargingStation.getPhaseGridToChargingStation(Phase.PHASE_3);
-		
-		calculateCurrentArray(currentAtGrid, currentPlanned, phase1ChargingStation, phase2ChargingStation, phase3ChargingStation);
-		
-		return currentAtGrid;
+		double currentOnPhase = car.canLoadPhase(phase) * currentPlanned;
+		return currentOnPhase; 
 	}
+	
+	
+	
 
 	
 	

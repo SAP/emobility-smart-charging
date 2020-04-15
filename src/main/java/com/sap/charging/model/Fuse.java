@@ -21,6 +21,10 @@ public class Fuse implements FuseTreeNode {
 	public double fusePhase2;
 	public double fusePhase3;
 	
+	private final boolean phase1Connected; 
+	private final boolean phase2Connected; 
+	private final boolean phase3Connected; 
+	
 	@JsonIgnore
 	private FuseTreeNode parent;
 	private ArrayList<FuseTreeNode> children;
@@ -36,13 +40,17 @@ public class Fuse implements FuseTreeNode {
 	 * @param fuseSize The size of each of the three fuses in A (Amperes)
 	 */
 	public Fuse(int id, double fuseSize) {
-		this.fusePhase1 = fuseSize;
-		this.fusePhase2 = fuseSize;
-		this.fusePhase3 = fuseSize;
+		this.id = id; 
 		
-		this.id = id;
+		this.fusePhase1 = fuseSize; 
+		this.fusePhase2 = fuseSize; 
+		this.fusePhase3 = fuseSize; 
 		
-		this.children = new ArrayList<FuseTreeNode>();
+		this.phase1Connected = true; 
+		this.phase2Connected = true; 
+		this.phase3Connected = true; 
+		
+		this.children = new ArrayList<FuseTreeNode>(); 
 	}
 	
 	@JsonCreator
@@ -51,12 +59,23 @@ public class Fuse implements FuseTreeNode {
 			@JsonProperty(value="fusePhase1", required=true) double fusePhase1,
 			@JsonProperty(value="fusePhase2", required=true) double fusePhase2,
 			@JsonProperty(value="fusePhase3", required=true) double fusePhase3,
+			@JsonProperty(value="phase1Connected") Boolean phase1Connected,
+			@JsonProperty(value="phase2Connected") Boolean phase2Connected,
+			@JsonProperty(value="phase3Connected") Boolean phase3Connected,
 			@JsonProperty(value="children", required=true) ArrayList<FuseTreeNode> children) {
+		
+		this.id = id;
+		
 		this.fusePhase1 = fusePhase1;
 		this.fusePhase2 = fusePhase2;
 		this.fusePhase3 = fusePhase3;
 		
-		this.id = id;
+		// Phase connections are optional. If they are not passed the Boolean variables will be null 
+		this.phase1Connected = phase1Connected == null ? true : phase1Connected; 
+		this.phase2Connected = phase2Connected == null ? true : phase2Connected; 
+		this.phase3Connected = phase3Connected == null ? true : phase3Connected; 
+		
+		this.sanityCheckPhaseConnected(); 
 		
 		this.children = children; 
 	}
@@ -92,6 +111,19 @@ public class Fuse implements FuseTreeNode {
 		return result;
 	}
 	
+	@Override
+	public boolean isPhase1Connected() {
+		return this.phase1Connected; 
+	}
+	@Override
+	public boolean isPhase2Connected() {
+		return this.phase2Connected; 
+	}
+	@Override
+	public boolean isPhase3Connected() {
+		return this.phase3Connected; 
+	}
+	
 	/**
 	 * 
 	 * @param child Can be a fuse or a ChargingStation
@@ -117,7 +149,9 @@ public class Fuse implements FuseTreeNode {
 	public void setParent(FuseTreeNode parent) {
 		this.parent = parent;
 	}
+	
 
+	
 	/**
 	 * Searches the entire subtree for charging station children
 	 * @return
@@ -252,6 +286,7 @@ public class Fuse implements FuseTreeNode {
 			return false;
 		return true;
 	}
+
 
 }
 
