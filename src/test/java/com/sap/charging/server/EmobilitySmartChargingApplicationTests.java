@@ -93,7 +93,7 @@ class EmobilitySmartChargingApplicationTests extends SimulationUnitTest {
         
 		HttpEntity<OptimizeChargingProfilesRequest> entity = new HttpEntity<>(request, headers);
 		
-		System.out.println("Testing POST request on uri=" + uri.toString());
+		// System.out.println("Testing POST request on uri=" + uri.toString());
 		
 		ResponseEntity<Object> response = this.restTemplate.postForEntity(uri, entity, Object.class); 
 		 
@@ -109,8 +109,8 @@ class EmobilitySmartChargingApplicationTests extends SimulationUnitTest {
 		}
 		catch (Exception e) {
 			
-			System.out.println("Response status: " + response.getStatusCodeValue());
-			System.out.println(response.getBody());
+			//System.out.println("Response status: " + response.getStatusCodeValue());
+			//System.out.println(response.getBody());
 			
 			fail("REST Request failed."); 
 		}

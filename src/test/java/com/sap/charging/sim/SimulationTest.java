@@ -334,7 +334,6 @@ public class SimulationTest extends SimulationUnitTest {
 		
 		PowerAssignment powerAssignment = sim.getState().getCurrentPowerAssignment(car); 
 		assertNotNull(powerAssignment); 
-		System.out.println(powerAssignment);
 		assertEquals(32, powerAssignment.getPhase1(), 0); 
 		assertEquals(0, powerAssignment.getPhase2(), 0); 
 		assertEquals(0, powerAssignment.getPhase3(), 0); 
