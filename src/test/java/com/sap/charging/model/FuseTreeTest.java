@@ -17,6 +17,7 @@ import com.sap.charging.dataGeneration.DataGenerator;
 import com.sap.charging.dataGeneration.common.DefaultDataGenerator;
 import com.sap.charging.model.ChargingStationFactory.Standard;
 import com.sap.charging.model.EnergyUtil.Phase;
+import com.sap.charging.opt.CONSTANTS;
 import com.sap.charging.sim.Simulation;
 import com.sap.charging.util.Callback;
 
@@ -44,9 +45,9 @@ public class FuseTreeTest {
 	public void testToString() {
 		String result = fuseTree.toString();
 		assertTrue(result.contains("l0"));
-		assertTrue(result.contains("4000"));
-		assertTrue(result.contains("1250"));
-		assertTrue(result.contains("800"));
+		assertTrue(result.contains(CONSTANTS.FUSE_LEVEL_0_SIZE + ""));
+		assertTrue(result.contains(CONSTANTS.FUSE_LEVEL_1_SIZE + ""));
+		assertTrue(result.contains(CONSTANTS.FUSE_LEVEL_2_SIZE + ""));
 	}
 
 	@Test
