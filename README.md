@@ -137,7 +137,6 @@ Please use the [GitHub issue tracker](../../issues) for any questions, bug repor
 - Document API EV parameters in Swagger
 
 ### License
-
-This file and all other files in this repository are licensed under the Apache Software License, v.2 and copyrighted under the copyright in [NOTICE file](NOTICE), except as noted otherwise in the [LICENSE file](LICENSE).
+Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved. This file and all other files in this repository are licensed under the Apache Software License 2.0 except as noted otherwise in the LICENSE file [include a link to the LICENSE file in your project repository].
 
 Please note that Docker images can contain other software which may be licensed under different licenses. This LICENSE and NOTICE files are also included in the Docker image. For any usage of built Docker images please make sure to check the licenses of the artifacts contained in the images.
