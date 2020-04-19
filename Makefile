@@ -1,5 +1,5 @@
 PROJECT_NAME?=evse
-NAME:=emobility_smart_charging
+NAME:=emobility-smart-charging
 DOCKER_USER?=
 DOCKER_PASSWORD?=
 DOCKER_PORT?=8080
