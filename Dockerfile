@@ -2,30 +2,30 @@
 ## Server ##
 ############
 FROM maven:alpine as build_server
+RUN apk add --update make
 
 # Copy from ChargingOptimizer
 WORKDIR /workspace/app
 COPY ./ ./
 
-RUN mvn clean install -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
+
+# Runs mvn clean install 
+RUN make emobility_smart_charging-build
 
 
 ##############
 ## Frontend ##
 ##############
 FROM node:lts-alpine as build_frontend
-
-#Generate TypeScript interfaces of Java request classes (mvn clean install already does this)
-#mvn typescript-generator:generate
+RUN apk add --update make
 
 # Use build results so far
 COPY --from=build_server /workspace/app /workspace/app
-WORKDIR /workspace/app/frontend 
+WORKDIR /workspace/app 
 
-RUN npm install
+# npm install and build frontend (Angular 9)
+RUN make emobility_smart_charging-build-frontend
 
-# Build frontend (Angular 8)
-RUN npm run build:prod:playground
 
 
 ##################

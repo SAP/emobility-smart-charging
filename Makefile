@@ -12,11 +12,10 @@ DOCKER_ECR_REGION?=eu-west-3
 default: $(NAME)-docker-start
 
 $(NAME)-build:
-	mvn clean install
+	mvn clean install -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
 $(NAME)-build-frontend:
-	mvn typescript-generator:generate
-	cd frontend && npm install && npm run build:playground
+	cd frontend && npm install && npm run build:prod:playground
 
 $(NAME)-start: $(NAME)-build
 	java -jar target/$(NAME)-0.0.1-SNAPSHOT.jar

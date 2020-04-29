@@ -1,0 +1,73 @@
+dist: bionic
+language: minimal
+
+jdk: 
+    - oraclejdk8
+
+addons:
+  apt: 
+    packages: 
+    - maven # Required for building the java backend
+    
+
+
+node_js: 
+  - "12"
+
+
+git:
+  depth: 1
+cache:
+  directories:
+  - "$HOME/.m2"
+notifications:
+  email: false
+    
+    
+# See Makefile for the contents of the commands
+    
+jobs:
+  include:
+    # Master branch acts as stable release
+    # Builds a docker image and pushes it to docker hub
+    - stage: prod   
+      if: branch = master and type != pull_request
+        
+      script: 
+        - make emobility_smart_charging-docker-build
+        
+        
+    # Any other branch acts as bug fix / feature test
+    # Builds backend (via mvn), frontend (via npm) and docker image
+    
+    - stage: dev
+      if: branch != master
+      name: dev_withoutDocker
+      
+      # Build backend and frontend (without Docker)
+      script: 
+        # Build backend (test build without Docker)
+        - make emobility_smart_charging-build
+            
+        # Build frontend (test build without Docker)
+        # Assumes mvn clean install was run for typescript file generation
+        # via mvn typescript-generator:generate
+        - nvm install 12.16.3
+        - nvm use node 12.16.3
+        - make emobility_smart_charging-build-frontend
+      
+    # This "build" script is also in the dev stage but runs in parallel
+    # Build Docker (builds backend and frontend again within Docker)  
+    - script: 
+      - make emobility_smart_charging-docker-build 
+      name: dev_withDocker
+      
+       
+        
+    
+    
+    
+    
+    
+    
+    
