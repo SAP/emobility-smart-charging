@@ -48,9 +48,7 @@ clean clean-$(NAME): clean-$(NAME)-containers clean-$(NAME)-images
 $(NAME)-docker-tag:
 	docker tag $(PROJECT_NAME)_$(NAME) $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME):$(DOCKER_TAG)
 
-$(NAME)-docker-push: 
-	$(NAME)-docker-build 
-	$(NAME)-docker-tag
+$(NAME)-docker-push: $(NAME)-docker-build $(NAME)-docker-tag
 	docker push $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME):$(DOCKER_TAG)
 
 $(NAME)-docker-tag-ecr:
