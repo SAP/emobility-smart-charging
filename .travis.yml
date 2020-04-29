@@ -60,6 +60,7 @@ jobs:
     # Build Docker (builds backend and frontend again within Docker)  
     - script: 
       - make emobility_smart_charging-docker-build 
+      if: branch != master
       name: dev_withDocker
       
        
