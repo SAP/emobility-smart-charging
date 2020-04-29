@@ -2,14 +2,15 @@ dist: bionic
 language: minimal
 
 jdk: 
-    - oraclejdk8
+  - oraclejdk8
 
 addons:
   apt: 
     packages: 
     - maven # Required for building the java backend
     
-
+services:
+  - docker # Enable docker push
 
 node_js: 
   - "12"
@@ -22,6 +23,8 @@ cache:
   - "$HOME/.m2"
 notifications:
   email: false
+  
+
     
     
 # See Makefile for the contents of the commands
@@ -34,7 +37,12 @@ jobs:
       if: branch = master and type != pull_request
         
       script: 
-        - make emobility_smart_charging-docker-build
+        # First, log in to Docker to be able to push
+        - echo "$TRAVIS_DOCKER_PASSWORD" | docker login -u "$TRAVIS_DOCKER_USER" --password-stdin
+        
+        # Builds docker image, tags the docker image, pushes the docker image to docker hub
+        # Images are pushed to the sapemob organization
+        - make emobility_smart_charging-docker-push DOCKER_USER=sapemob
         
         
     # Any other branch acts as bug fix / feature test
@@ -65,6 +73,7 @@ jobs:
       
        
         
+       
     
     
     
