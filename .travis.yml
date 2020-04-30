@@ -42,7 +42,7 @@ jobs:
         
         # Builds docker image, tags the docker image, pushes the docker image to docker hub
         # Images are pushed to the sapemob organization
-        - make emobility_smart_charging-docker-push DOCKER_USER=sapemob
+        - make emobility-smart-charging-docker-push DOCKER_USER=sapemob
         
         
     # Any other branch acts as bug fix / feature test
@@ -55,19 +55,19 @@ jobs:
       # Build backend and frontend (without Docker)
       script: 
         # Build backend (test build without Docker)
-        - make emobility_smart_charging-build
+        - make emobility-smart-charging-build
             
         # Build frontend (test build without Docker)
         # Assumes mvn clean install was run for typescript file generation
         # via mvn typescript-generator:generate
         - nvm install 12.16.3
         - nvm use node 12.16.3
-        - make emobility_smart_charging-build-frontend
+        - make emobility-smart-charging-build-frontend
       
     # This "build" script is also in the dev stage but runs in parallel
     # Build Docker (builds backend and frontend again within Docker)  
     - script: 
-      - make emobility_smart_charging-docker-build 
+      - make emobility-smart-charging-docker-build 
       if: branch != master
       name: dev_withDocker
       

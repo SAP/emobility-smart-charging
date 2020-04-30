@@ -10,7 +10,7 @@ COPY ./ ./
 
 
 # Runs mvn clean install 
-RUN make emobility_smart_charging-build
+RUN make emobility-smart-charging-build
 
 
 ##############
@@ -24,7 +24,7 @@ COPY --from=build_server /workspace/app /workspace/app
 WORKDIR /workspace/app 
 
 # npm install and build frontend (Angular 9)
-RUN make emobility_smart_charging-build-frontend
+RUN make emobility-smart-charging-build-frontend
 
 
 
