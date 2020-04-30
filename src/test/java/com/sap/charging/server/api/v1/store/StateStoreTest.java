@@ -149,6 +149,7 @@ public class StateStoreTest extends SimulationUnitTest {
 		
 		State state = stateStore.toState(); 
 		
+		Simulation.verbosity = 0; 
 		strategy.reactReoptimize(state);
 		Car car = state.getCar(0); 
 		
