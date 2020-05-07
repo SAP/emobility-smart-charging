@@ -27,7 +27,7 @@ phases:
     commands:
       - echo Build and push started on `date`
       - echo Building and pushing the Docker image...
-      - make DOCKER_ECR_ACCOUNT_ID=$AWS_ACCOUNT_ID DOCKER_ECR_REGION=$AWS_DEFAULT_REGION DOCKER_ECR_TAG=$IMAGE_TAG emobility-smart-charging-docker-push-ecr
+      - make DOCKER_ECR_ACCOUNT_ID=$AWS_ACCOUNT_ID DOCKER_ECR_REGION=$AWS_DEFAULT_REGION DOCKER_TAG=$IMAGE_TAG emobility-smart-charging-docker-push-ecr
   post_build:
     commands:
       - echo Build and push completed on `date`
