@@ -52,7 +52,7 @@ $(NAME)-docker-push: $(NAME)-docker-build $(NAME)-docker-tag
 	docker push $(DOCKER_USER)/$(PROJECT_NAME)_$(NAME):$(DOCKER_TAG)
 
 $(NAME)-docker-tag-ecr:
-	docker tag $(PROJECT_NAME)_$(NAME):$(DOCKER_TAG) $(DOCKER_ECR_ACCOUNT_ID).dkr.ecr.$(DOCKER_ECR_REGION).amazonaws.com/$(NAME):$(DOCKER_TAG)
+	docker tag $(PROJECT_NAME)_$(NAME) $(DOCKER_ECR_ACCOUNT_ID).dkr.ecr.$(DOCKER_ECR_REGION).amazonaws.com/$(NAME):$(DOCKER_TAG)
 
 $(NAME)-docker-push-ecr: $(NAME)-docker-build $(NAME)-docker-tag-ecr
 	aws ecr get-login-password --region $(DOCKER_ECR_REGION) | docker login --username AWS --password-stdin $(DOCKER_ECR_ACCOUNT_ID).dkr.ecr.$(DOCKER_ECR_REGION).amazonaws.com/$(NAME)
