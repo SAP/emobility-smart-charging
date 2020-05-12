@@ -53,23 +53,30 @@ Enter `node --version` and `npm --version` in your command line to test your ins
 
 ### Download and Installation
 #### With Docker
-The simplest way to run this application is to use Docker and the `Dockerfile` in this repository. 
-This will compile the server and the frontend. 
-
-First, build the Docker image (this may take a few minutes). 
-[Parameters](https://docs.docker.com/engine/reference/commandline/build/): 
-- `-t` Tag the image with a name
-``` 
-docker build -t emobility-smart-charging .
+The simplest way to run this application is to use the public Docker image. 
+First, pull the Docker image: 
+```
+docker pull sapemob/evse_emobility-smart-charging
 ```
 
-Next, start the application by running the container (the server runs on port 8080). 
+Next, start the application by running the Docker container (the server runs on port 8080). 
 [Parameters](https://docs.docker.com/engine/reference/run/): 
 - `-d` Detached mode: Run container in the background
 - `-p` Publish a container's port to the host: Change the first port in `8080:8080` to adjust which port you want the application to run on
 ```
-docker run -d -p 8080:8080 emobility-smart-charging
+docker run -d -p 8080:8080 sapemob/evse_emobility-smart-charging
 ```
+
+
+Alternatively, you can build the Docker image yourself using the `Dockerfile` in this repository. 
+This will compile the server and the frontend. 
+[Parameters](https://docs.docker.com/engine/reference/commandline/build/): 
+- `-t` Tag the image with a name
+``` 
+docker build -t sapemob/evse_emobility-smart-charging .
+```
+
+
 
 #### Without Docker
 This section is relevant if the application should be run without Docker, for example for development purposes. 
