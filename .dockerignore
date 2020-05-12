@@ -14,3 +14,5 @@ public/playground/
 
 # This should be built using mvn
 target/
+
+Dockerfile
