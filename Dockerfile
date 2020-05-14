@@ -6,6 +6,7 @@ RUN apk add --update make
 
 # Copy from ChargingOptimizer
 WORKDIR /workspace/app
+COPY ./frontend ./frontend
 COPY ./src ./src
 COPY ./pom.xml ./pom.xml
 COPY ./Makefile ./Makefile
@@ -20,9 +21,9 @@ RUN make emobility-smart-charging-build
 FROM node:lts-alpine as build_frontend
 RUN apk add --update make maven
 
-# Copy from ChargingOptimizer
+# Use build results so far
+COPY --from=build_server /workspace/app/frontend /workspace/app/frontend
 WORKDIR /workspace/app
-COPY ./frontend ./frontend
 COPY ./Makefile ./Makefile
 
 # npm install and build frontend (Angular 9)

@@ -22,7 +22,6 @@ $(NAME)-build-frontend: $(NAME)-npm-install-frontend
 	cd frontend && npm run build:prod:playground
 
 $(NAME)-build-only-frontend:
-	mvn typescript-generator:generate
 	cd frontend && npm run build:prod:playground
 
 $(NAME)-start: $(NAME)-build
