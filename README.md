@@ -53,7 +53,7 @@ Enter `node --version` and `npm --version` in your command line to test your ins
 
 ### Download and Installation
 #### With Docker
-The simplest way to run this application is to use the public Docker image. 
+The simplest way to run this application is to use the public [Docker image](https://hub.docker.com/repository/docker/sapemob/evse_emobility-smart-charging). 
 First, pull the Docker image: 
 ```
 docker pull sapemob/evse_emobility-smart-charging
