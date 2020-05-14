@@ -47,9 +47,8 @@ jobs:
         
     # Any other branch acts as bug fix / feature test
     # Builds backend (via mvn), frontend (via npm) and docker image
-    
     - stage: dev
-      if: branch != master
+      if: branch != master or type = pull_request
       name: dev_withoutDocker
       
       # Build backend and frontend (without Docker)
