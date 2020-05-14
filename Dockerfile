@@ -12,7 +12,7 @@ COPY ./pom.xml ./pom.xml
 COPY ./Makefile ./Makefile
 
 # Runs mvn clean install 
-RUN make emobility_smart_charging-build
+RUN make emobility-smart-charging-build
 
 
 ##############

@@ -53,10 +53,10 @@ Enter `node --version` and `npm --version` in your command line to test your ins
 
 ### Download and Installation
 #### With Docker
-The simplest way to run this application is to use the public Docker image. 
+The simplest way to run this application is to use the public [Docker image](https://hub.docker.com/repository/docker/sapemob/evse_emobility-smart-charging). 
 First, pull the Docker image: 
 ```
-docker pull sapemob/evse_emobility_smart_charging
+docker pull sapemob/evse_emobility-smart-charging
 ```
 
 Next, start the application by running the Docker container (the server runs on port 8080). 
@@ -64,7 +64,7 @@ Next, start the application by running the Docker container (the server runs on 
 - `-d` Detached mode: Run container in the background
 - `-p` Publish a container's port to the host: Change the first port in `8080:8080` to adjust which port you want the application to run on
 ```
-docker run -d -p 8080:8080 sapemob/evse_emobility_smart_charging
+docker run -d -p 8080:8080 sapemob/evse_emobility-smart-charging
 ```
 
 
@@ -73,7 +73,7 @@ This will compile the server and the frontend.
 [Parameters](https://docs.docker.com/engine/reference/commandline/build/): 
 - `-t` Tag the image with a name
 ``` 
-docker build -t sapemob/evse_emobility_smart_charging .
+docker build -t sapemob/evse_emobility-smart-charging .
 ```
 
 
@@ -125,11 +125,11 @@ In the top part of the playground screen you can edit the following input parame
 * **Fuse**: Each fuse is characterized by the current at which the fuse cuts off the power supply. The charging optimizer assumes three-phase electrical circuits. Therefore, each fuse is defined by a triplet of current values, one per phase. The playground lets you add further fuses to the infrastructure by clicking the corresponding buttons. By default, the playground uses 32 Ampere per phase for new fuses.
 * **Charging station**: Each charging station is characterized by the current at which the built-in fuse cuts off the power supply. The playground lets you add further charging stations by clicking the corresponding buttons. By default, the playground uses charging stations with 32 Ampere fuses.
 
-* **Car**: In the playground, cars can be added to charging stations to express their arrival at the charging station. When you add cars via the corresponding button, semantically you create a charging demand. In the charging optimizer, the cars with their charging demands are the central items for the optimization process. The charging optimizer creates one charge plan per car. Therfore you need to have at least one car in your input for the charge optimizer to create a non-trivial output. The more cars you add to the input, the higher becomes the competition for the scarce resource of charging current. With more cars, the available charging capacity is divided and more cars are assigned only partial or no charging opportunities.
+* **Car**: In the playground, cars can be added to charging stations to express their arrival at the charging station. When you add cars via the corresponding button, semantically you create a charging demand. In the charging optimizer, the cars with their charging demands are the central items for the optimization process. The charging optimizer creates one charge plan per car. Therefore you need to have at least one car in your input for the charge optimizer to create a non-trivial output. The more cars you add to the input, the higher becomes the competition for the scarce resource of charging current. With more cars, the available charging capacity is divided and more cars are assigned only partial or no charging opportunities.
 When you check out the generated JSON request you will notice the long list of parameters per car.
 
 #### Understanding charging optimizer output
-To trigger the charging optimizer us the button labelled **Optimize charge plans**. The resultung JSON response contains a list of charge plans, one per car. Note that the actual charge plan for the car is labelled **currentPlan** and consists of a list of 96 entries. Each entry corresponds to a 15 minute interval since midnight. The entered value specifies the charging current which the optimizer assigns to this car in the given interval.
+To trigger the charging optimizer us the button labelled **Optimize charge plans**. The resulting JSON response contains a list of charge plans, one per car. Note that the actual charge plan for the car is labelled **currentPlan** and consists of a list of 96 entries. Each entry corresponds to a 15 minute interval since midnight. The entered value specifies the charging current which the optimizer assigns to this car in the given interval.
 
 ### Known Issues
 Please refer to the list of [issues](../../issues) on GitHub.
