@@ -18,7 +18,7 @@ RUN make emobility-smart-charging-build
 ## Frontend ##
 ##############
 FROM node:lts-alpine as build_frontend
-RUN apk add --update make
+RUN apk add --update make maven
 
 # Copy from ChargingOptimizer
 WORKDIR /workspace/app
