@@ -14,8 +14,14 @@ default: $(NAME)-docker-start
 $(NAME)-build:
 	mvn clean install -B -Dorg.slf4j.simpleLogger.log.org.apache.maven.cli.transfer.Slf4jMavenTransferListener=warn
 
-$(NAME)-build-frontend:
-	cd frontend && npm install && npm run build:prod:playground
+$(NAME)-npm-install-frontend:
+	cd frontend && npm install
+
+$(NAME)-build-frontend: $(NAME)-npm-install-frontend
+	cd frontend && npm run build:prod:playground
+
+$(NAME)-build-only-frontend:
+	cd frontend && npm run build:prod:playground
 
 $(NAME)-start: $(NAME)-build
 	java -jar target/$(NAME)-0.0.1-SNAPSHOT.jar
