@@ -38,19 +38,21 @@
                 </app-fuse-tree-component>
             </div>
 
-            <div class="floatRight clearBoth">
-                <button (click)="onClickResetData()" mat-raised-button color="warn">
-                    <mat-icon>delete</mat-icon>
-                    Reset data
-                </button>
-            </div>
-            <div class="floatLeft">
+
+
+
+            <div class="floatLeft clearBoth" style="margin-top: 5px">
                 <button (click)="onClickShowFuseTreeCircuitDiagram()" mat-raised-button color="primary">
                     <mat-icon>visibility</mat-icon>
                     Show circuit diagram of fuse tree
                 </button>
             </div>
-           
+            <div class="floatRight" style="margin-top: 5px">
+                <button mat-button mat-raised-button color="primary" (click)="onClickExportWebsiteData()">
+                    <mat-icon>save_alt</mat-icon>
+                    Export data as file
+                </button>
+            </div>
 
             <div class="floatLeft clearBoth" style="margin-top: 5px">
                 <button (click)="onClickSendRequest()" mat-raised-button color="primary">
@@ -58,6 +60,23 @@
                     Optimize charge plans (send request to server)
                 </button>
             </div>
+            <div class="floatRight" style="margin-top: 5px">
+                <button mat-button mat-raised-button color="primary" (click)="onClickImportWebsiteData()">
+                    <mat-icon>backup</mat-icon>
+                    Import data from file
+                </button>
+            </div>
+
+            <div class="floatRight clearBoth" style="margin-top: 5px">
+                <button (click)="onClickResetData()" mat-raised-button color="warn">
+                    <mat-icon>delete</mat-icon>
+                    Reset data
+                </button>
+            </div>
+
+         
+            
+            
 
         </mat-expansion-panel>
 

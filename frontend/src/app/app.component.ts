@@ -11,6 +11,7 @@ import * as ChartAnnotation from 'chartjs-plugin-annotation';
 import * as Chart from 'chart.js';
 import { ChartChargePlans } from './utils/ChartChargePlans';
 import { FuseTreeCircuitDiagramDialog } from './fuse-tree-circuit-diagram/fuse-tree-circuit-diagram-dialog';
+import { Utils } from './utils/Utils';
 
 @Component({
     selector: 'app-root',
@@ -84,8 +85,29 @@ export class AppComponent {
     }
 
     onClickResetData(): void {
-        this.data.request = this.getInitialRequest();
-        this.data.settings = this.getInitialSettings();
+        if (confirm("This will reset all data on this website. Proceed?")) {
+            this.data.request = this.getInitialRequest();
+            this.data.settings = this.getInitialSettings();
+        }
+    }
+
+    onClickExportWebsiteData(): void {
+        Utils.createFileDownload("emobility-smart-charging-input.json", JSON.stringify(this.data, null, 4)); 
+    }
+
+    onClickImportWebsiteData(): void {
+        var self = this;
+        this.createFileUpload(function (fileContent) {
+            console.log("Importing data from file: ");
+            console.log(fileContent);
+            let importedData: websiteDataType = JSON.parse(fileContent);
+
+            self.applyObserverFunctions.call(self, importedData);
+            self.persistToLocalStorage();
+
+            // Update UI
+            //self.data = importedData;  
+        });
     }
 
     onClickSendRequest(): void {
@@ -482,6 +504,42 @@ export class AppComponent {
     deepClone(object: any): any {
         return JSON.parse(JSON.stringify(object));
     }
+
+    createFileUpload(callbackFunction) {
+        var element = document.createElement("input");
+        element.setAttribute("type", "file");
+        var self = this;
+        element.addEventListener("change", function (event) {
+            self.onUploadFileSelect.call(self, event, callbackFunction);
+        });
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+
+        document.body.removeChild(element);
+    }
+
+    // https://stackoverflow.com/questions/16505333/get-the-data-of-uploaded-file-in-javascript
+    onUploadFileSelect(event, callbackFunction) {
+        var files = event.target.files; // FileList object
+
+        // use the 1st file from the list
+        let f = files[0];
+
+        var reader = new FileReader();
+        var self = this;
+        // Closure to capture the file information.
+        reader.onload = (function (theFile) {
+            return function (e) {
+                callbackFunction.call(self, e.target.result);
+            };
+        })(f);
+
+        // Read in the image file as a data URL.
+        reader.readAsText(f);
+    }
+
 
 }
 
