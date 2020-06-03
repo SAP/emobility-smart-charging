@@ -128,8 +128,12 @@ In the top part of the playground screen you can edit the following input parame
 * **Car**: In the playground, cars can be added to charging stations to express their arrival at the charging station. When you add cars via the corresponding button, semantically you create a charging demand. In the charging optimizer, the cars with their charging demands are the central items for the optimization process. The charging optimizer creates one charge plan per car. Therefore you need to have at least one car in your input for the charge optimizer to create a non-trivial output. The more cars you add to the input, the higher becomes the competition for the scarce resource of charging current. With more cars, the available charging capacity is divided and more cars are assigned only partial or no charging opportunities.
 When you check out the generated JSON request you will notice the long list of parameters per car.
 
+Use the button “Show circuit diagram of fuse tree” to visualize the wiring of the configured charging infrastructure. 
+
 #### Understanding charging optimizer output
 To trigger the charging optimizer us the button labelled **Optimize charge plans**. The resulting JSON response contains a list of charge plans, one per car. Note that the actual charge plan for the car is labelled **currentPlan** and consists of a list of 96 entries. Each entry corresponds to a 15 minute interval since midnight. The entered value specifies the charging current which the optimizer assigns to this car in the given interval.
+
+Additionally, the playground visualizes the aggregated charge plans in a stacked diagram. Each vehicle’s charge plan is represented by one color. The placement of the colored boxes along the horizontal axis indicates start and end of the charging intervals. The height of the boxes corresponds to the respective charging power (in Watt).
 
 ### Known Issues
 Please refer to the list of [issues](../../issues) on GitHub.
