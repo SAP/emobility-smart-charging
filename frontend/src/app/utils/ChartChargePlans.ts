@@ -156,9 +156,19 @@ export class ChartChargePlans {
             chartOptions: { 
                 responsive: true,
                 scales: {
+                    xAxes: [{
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Time'
+                        }
+                    }],
                     yAxes: [{
                         // Add buffer so that infrastructure annotation label is not cut off
-                        ticks: { suggestedMax: Utils.getInfrastructureLimitW(originalRequest.state.fuseTree)*1.1 }
+                        ticks: { suggestedMax: Utils.getInfrastructureLimitW(originalRequest.state.fuseTree)*1.1 },
+                        scaleLabel: {
+                            display: true,
+                            labelString: 'Power (W)'
+                        }
                     }]
                 },
                 annotation: this.getChartAnnotations(originalRequest, jsonContent, chartSettings)
