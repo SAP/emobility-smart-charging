@@ -1,0 +1,31 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: emobility-smart-charging
+Upstream-Contact: Oliver Frendo <oliver.frendo@sap.com>
+Source: https://github.com/SAP/emobility-smart-charging
+
+Files: docs/*
+       frontend/*
+	   src/*
+	   gen/*
+	   .travis.yml
+	   pom.xml
+	   postman/*
+	   .mvn/*
+	   mvnw
+	   mvwn.cmd
+	   Dockerfile
+	   Makefile
+	   *.md
+	   buildspec.yml
+	   manifest.yml
+	   manifest_dev.yml
+Copyright: 2020 SAP SE or an SAP affiliate company and emobility-smart-charging contributors
+License: Apache-2.0
+
+
+Files: *.gitignore
+       *.dockerignore
+Copyright: 2020 SAP SE or an SAP affiliate company and emobility-smart-charging contributors
+License: CC0-1.0
+
+
