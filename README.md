@@ -10,7 +10,6 @@
 1. [Known Issues](#known-issues)
 1. [How to obtain support](#how-to-obtain-support)
 1. [To-Do (upcoming changes)](#to-do-upcoming-changes)
-1. [License](#license)
 
 
 ### Description
@@ -148,8 +147,3 @@ Please use the [GitHub issue tracker](../../issues) for any questions, bug repor
 - Provide translation of charging profiles to the Open Charge Point Protocol (OCPP) 1.6 or 2.0 
 - Provide parameters for standard EV models 
 - Document API EV parameters in Swagger
-
-### License
-Copyright (c) 2020 SAP SE or an SAP affiliate company. All rights reserved. This file and all other files in this repository are licensed under the Apache Software License 2.0 except as noted otherwise in the [LICENSE](LICENSE) file.
-
-Please note that Docker images can contain other software which may be licensed under different licenses. This LICENSE and NOTICE files are also included in the Docker image. For any usage of built Docker images please make sure to check the licenses of the artifacts contained in the images.

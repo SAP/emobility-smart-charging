@@ -12,8 +12,12 @@ public abstract class CarDepartureForecast extends Forecast {
 
 	public abstract int getExpectedDepartureTimeSeconds(State state, Car car);
 	
+	/**
+	 * The default value (17:03) is the median departure time of a historical dataset 
+	 * @return
+	 */
 	public static CarDepartureForecast getDefaultCarDepartureForecast() {
-		return new CarDepartureForecastMedianTimestamp(17*3600 + 15*60); 
+		return new CarDepartureForecastMedianTimestamp(17*3600 + 3*60); 
 	}
 	
 	public String getRMatrixString(Car car) {
