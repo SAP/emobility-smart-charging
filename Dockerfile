@@ -19,15 +19,17 @@ RUN make emobility-smart-charging-build
 ## Frontend ##
 ##############
 FROM node:lts-alpine as build_frontend
+RUN apk add --update make maven
 
 # Use build results so far
 COPY --from=build_server /workspace/app/frontend /workspace/app/frontend
-WORKDIR /workspace/app 
+WORKDIR /workspace/app
+COPY ./Makefile ./Makefile
 
 # npm install and build frontend (Angular 9)
 # Separate steps so that Docker can cache npm install
-RUN cd frontend && npm install 
-RUN cd frontend && npm run build:prod:playground
+RUN make emobility-smart-charging-npm-install-frontend
+RUN make emobility-smart-charging-build-only-frontend
 
 
 ##################
