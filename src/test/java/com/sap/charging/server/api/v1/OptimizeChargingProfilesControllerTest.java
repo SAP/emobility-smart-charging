@@ -23,28 +23,30 @@ import com.sap.charging.server.api.v1.store.OptimizerSettings;
 @ExtendWith(SpringExtension.class)
 class OptimizeChargingProfilesControllerTest {
 
-	private OptimizeChargingProfilesController classUnderTest; 
+    private OptimizeChargingProfilesController classUnderTest;
 
-	@BeforeEach
-	void setup() {
-		this.classUnderTest = new OptimizeChargingProfilesController();
-	}
-	
-	private static Stream<Arguments> buildStrategyValues() {
+    @BeforeEach
+    void setup() {
+        this.classUnderTest = new OptimizeChargingProfilesController();
+    }
+
+    private static Stream<Arguments> buildStrategyValues() {
         return Stream.of(
             arguments("Default settings", OptimizerSettings.getDefaultOptimizerSettings(), TimeslotSortingCriteria.INDEX),
             arguments("Empty settings with no weights", new OptimizerSettings(0, 0, 0, 0), TimeslotSortingCriteria.INDEX),
             arguments("Settings with highest objective: fair share", new OptimizerSettings(1, 0, 0, 0), TimeslotSortingCriteria.INDEX),
-            arguments("Settings with highest objective: peak shaving", new OptimizerSettings(1, 10, 0, 0), TimeslotSortingCriteria.PEAK_DEMAND), 
-            arguments("Settings with highest objective: energy costs", new OptimizerSettings(1, 10, 100, 0), TimeslotSortingCriteria.PRICE));
+            arguments("Settings with highest objective: peak shaving", new OptimizerSettings(1, 10, 0, 0),
+                TimeslotSortingCriteria.PEAK_DEMAND),
+            arguments("Settings with highest objective: energy costs", new OptimizerSettings(1, 10, 100, 0),
+                TimeslotSortingCriteria.PRICE));
     }
-	
-	@ParameterizedTest
-	@MethodSource("buildStrategyValues")
+
+    @ParameterizedTest
+    @MethodSource("buildStrategyValues")
     @DisplayName("Build strategy based on incoming API request")
-	void buildStrategy(String name, OptimizerSettings settings, TimeslotSortingCriteria expectedSortingCritera) {
-		StrategyAlgorithmic strategy = (StrategyAlgorithmic) this.classUnderTest.buildStrategy(settings);
-		assertEquals(expectedSortingCritera, strategy.getSortingCriteriaByObjective());
-	}
+    void buildStrategy(String name, OptimizerSettings settings, TimeslotSortingCriteria expectedSortingCritera) {
+        StrategyAlgorithmic strategy = (StrategyAlgorithmic) this.classUnderTest.buildStrategy(settings);
+        assertEquals(expectedSortingCritera, strategy.getSortingCriteriaByObjective());
+    }
 
 }

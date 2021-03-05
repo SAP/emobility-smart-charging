@@ -4,76 +4,76 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class OptimizerSettings {
-	
-	private double weightObjectiveFairShare;
-	private double weightObjectivePeakShaving;
-	private double weightObjectiveEnergyCosts;
-	private double weightObjectiveLoadImbalance;
-	
-	public OptimizerSettings() {}
-	
-	@JsonCreator
-	public OptimizerSettings(@JsonProperty("weightObjectiveFairShare") double weightObjectiveFairShare,
-			@JsonProperty("weightObjectivePeakShaving") double weightObjectivePeakShaving,
-			@JsonProperty("weightObjectiveEnergyCosts") double weightObjectiveEnergyCosts,
-			@JsonProperty("weightObjectiveLoadImbalance") double weightObjectiveLoadImbalance
-			) {
-		this.weightObjectiveFairShare = weightObjectiveFairShare;
-		this.weightObjectivePeakShaving = weightObjectivePeakShaving;
-		this.weightObjectiveEnergyCosts = weightObjectiveEnergyCosts;
-		this.weightObjectiveLoadImbalance = weightObjectiveLoadImbalance;
-	}
-	
-	/**
-	 * Default settings are to only use fair share as the optimization goal.
-	 * @return
-	 */
-	public static OptimizerSettings getDefaultOptimizerSettings() {
-		OptimizerSettings settings = new OptimizerSettings();
-		settings.setWeightObjectiveFairShare(1);
-		settings.setWeightObjectiveEnergyCosts(0);
-		settings.setWeightObjectiveLoadImbalance(0);
-		settings.setWeightObjectivePeakShaving(0);
-		return settings;
-	}
 
-	public double getWeightObjectiveFairShare() {
-		return weightObjectiveFairShare;
-	}
+    private double weightObjectiveFairShare;
+    private double weightObjectivePeakShaving;
+    private double weightObjectiveEnergyCosts;
+    private double weightObjectiveLoadImbalance;
 
-	public void setWeightObjectiveFairShare(double weightObjectiveFairShare) {
-		this.weightObjectiveFairShare = weightObjectiveFairShare;
-	}
+    public OptimizerSettings() {}
 
-	public double getWeightObjectivePeakShaving() {
-		return weightObjectivePeakShaving;
-	}
+    @JsonCreator
+    public OptimizerSettings(@JsonProperty("weightObjectiveFairShare") double weightObjectiveFairShare,
+        @JsonProperty("weightObjectivePeakShaving") double weightObjectivePeakShaving,
+        @JsonProperty("weightObjectiveEnergyCosts") double weightObjectiveEnergyCosts,
+        @JsonProperty("weightObjectiveLoadImbalance") double weightObjectiveLoadImbalance) {
+        this.weightObjectiveFairShare = weightObjectiveFairShare;
+        this.weightObjectivePeakShaving = weightObjectivePeakShaving;
+        this.weightObjectiveEnergyCosts = weightObjectiveEnergyCosts;
+        this.weightObjectiveLoadImbalance = weightObjectiveLoadImbalance;
+    }
 
-	public void setWeightObjectivePeakShaving(double weightObjectivePeakShaving) {
-		this.weightObjectivePeakShaving = weightObjectivePeakShaving;
-	}
+    /**
+     * Default settings are to only use fair share as the optimization goal.
+     * 
+     * @return
+     */
+    public static OptimizerSettings getDefaultOptimizerSettings() {
+        OptimizerSettings settings = new OptimizerSettings();
+        settings.setWeightObjectiveFairShare(1);
+        settings.setWeightObjectiveEnergyCosts(0);
+        settings.setWeightObjectiveLoadImbalance(0);
+        settings.setWeightObjectivePeakShaving(0);
+        return settings;
+    }
 
-	public double getWeightObjectiveEnergyCosts() {
-		return weightObjectiveEnergyCosts;
-	}
+    public double getWeightObjectiveFairShare() {
+        return weightObjectiveFairShare;
+    }
 
-	public void setWeightObjectiveEnergyCosts(double weightObjectiveEnergyCosts) {
-		this.weightObjectiveEnergyCosts = weightObjectiveEnergyCosts;
-	}
+    public void setWeightObjectiveFairShare(double weightObjectiveFairShare) {
+        this.weightObjectiveFairShare = weightObjectiveFairShare;
+    }
 
-	public double getWeightObjectiveLoadImbalance() {
-		return weightObjectiveLoadImbalance;
-	}
+    public double getWeightObjectivePeakShaving() {
+        return weightObjectivePeakShaving;
+    }
 
-	public void setWeightObjectiveLoadImbalance(double weightObjectiveLoadImbalance) {
-		this.weightObjectiveLoadImbalance = weightObjectiveLoadImbalance;
-	}
+    public void setWeightObjectivePeakShaving(double weightObjectivePeakShaving) {
+        this.weightObjectivePeakShaving = weightObjectivePeakShaving;
+    }
 
-	@Override
-	public String toString() {
-		return "OptimizerSettings [weightObjectiveFairShare=" + weightObjectiveFairShare
-				+ ", weightObjectivePeakShaving=" + weightObjectivePeakShaving + ", weightObjectiveEnergyCosts="
-				+ weightObjectiveEnergyCosts + ", weightObjectiveLoadImbalance=" + weightObjectiveLoadImbalance + "]";
-	}
+    public double getWeightObjectiveEnergyCosts() {
+        return weightObjectiveEnergyCosts;
+    }
+
+    public void setWeightObjectiveEnergyCosts(double weightObjectiveEnergyCosts) {
+        this.weightObjectiveEnergyCosts = weightObjectiveEnergyCosts;
+    }
+
+    public double getWeightObjectiveLoadImbalance() {
+        return weightObjectiveLoadImbalance;
+    }
+
+    public void setWeightObjectiveLoadImbalance(double weightObjectiveLoadImbalance) {
+        this.weightObjectiveLoadImbalance = weightObjectiveLoadImbalance;
+    }
+
+    @Override
+    public String toString() {
+        return "OptimizerSettings [weightObjectiveFairShare=" + weightObjectiveFairShare
+            + ", weightObjectivePeakShaving=" + weightObjectivePeakShaving + ", weightObjectiveEnergyCosts="
+            + weightObjectiveEnergyCosts + ", weightObjectiveLoadImbalance=" + weightObjectiveLoadImbalance + "]";
+    }
 
 }
