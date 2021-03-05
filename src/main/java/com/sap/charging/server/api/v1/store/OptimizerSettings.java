@@ -17,6 +17,12 @@ public class OptimizerSettings {
         @JsonProperty("weightObjectivePeakShaving") double weightObjectivePeakShaving,
         @JsonProperty("weightObjectiveEnergyCosts") double weightObjectiveEnergyCosts,
         @JsonProperty("weightObjectiveLoadImbalance") double weightObjectiveLoadImbalance) {
+
+        if (weightObjectiveFairShare < 0 || weightObjectivePeakShaving < 0 || weightObjectiveEnergyCosts < 0
+            || weightObjectiveLoadImbalance < 0) {
+            throw new IllegalArgumentException("Optimizer objective weight settings should be >= 0");
+        }
+
         this.weightObjectiveFairShare = weightObjectiveFairShare;
         this.weightObjectivePeakShaving = weightObjectivePeakShaving;
         this.weightObjectiveEnergyCosts = weightObjectiveEnergyCosts;
