@@ -64,7 +64,7 @@ class EmobilitySmartChargingApplicationTests extends SimulationUnitTest {
 	}
 
 	@Test
-	void testRESTEndpoint_singleCarAssignment() throws URISyntaxException {
+	void testRestEndpoint_singleCarAssignment() throws URISyntaxException {
 		assertThat(controller).isNotNull();
 		
 		Car car = state.getCar(0); 
@@ -82,7 +82,7 @@ class EmobilitySmartChargingApplicationTests extends SimulationUnitTest {
 		
 		StateStore state = new StateStore(currentTimeSeconds, null, chargingStations, 100.0, dataSim.getCars(), dataSim.getEnergyPriceHistory(), carAssignments);
 		
-		OptimizeChargingProfilesRequest request = new OptimizeChargingProfilesRequest(state, event, 0); 
+		OptimizeChargingProfilesRequest request = new OptimizeChargingProfilesRequest(state, event, null, 0); 
 		
 		HttpHeaders headers = new HttpHeaders();
 		//headers.add("Authorization", "Basic dXNlcjE6QkU0a3BUWkhrQ3BNTVZqMzh6cGo=");
@@ -96,7 +96,6 @@ class EmobilitySmartChargingApplicationTests extends SimulationUnitTest {
 		// System.out.println("Testing POST request on uri=" + uri.toString());
 		
 		ResponseEntity<Object> response = this.restTemplate.postForEntity(uri, entity, Object.class); 
-		 
 
 		try {
 			OptimizeChargingProfilesResponse result = mapper.convertValue(response.getBody(), OptimizeChargingProfilesResponse.class); 
@@ -108,14 +107,8 @@ class EmobilitySmartChargingApplicationTests extends SimulationUnitTest {
 			
 		}
 		catch (Exception e) {
-			
-			//System.out.println("Response status: " + response.getStatusCodeValue());
-			//System.out.println(response.getBody());
-			
 			fail("REST Request failed."); 
 		}
-		
-		
 	}
 
 }

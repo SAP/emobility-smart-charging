@@ -119,7 +119,6 @@ public class StrategyAlgorithmic extends Strategy {
 		if (highestObjective == objectiveFairShare || highestObjective == null) {
 			return TimeslotSortingCriteria.INDEX;
 		}
-			
 		
 		throw new RuntimeException("Recheck objective weights");
 	}
@@ -789,11 +788,10 @@ public class StrategyAlgorithmic extends Strategy {
 				log(2, "No expected departure time passed in, setting to expectedDepartureTimeSeconds=" + expectedDepartureTimeSeconds); 
 			}
 			
-			
 			// Always reoptimize
 			if (car.isFullyCharged() == false) {
 				scheduler.fillChargingPlanToMinSoC(state, currentK, state.energyPriceHistory.getNTimeslots(), car, chargingStation, state.currentTimeSeconds);
-				scheduler.fillChargingPlanToFull(state, currentK, state.energyPriceHistory.getNTimeslots(), car, chargingStation, state.currentTimeSeconds);
+				scheduler.fillChargingPlanByCost(state, currentK, state.energyPriceHistory.getNTimeslots(), car, chargingStation, state.currentTimeSeconds);
 			}
 			
 			// Always reoptimize for nonlinear processes (frees up more infrastructure capacity):
