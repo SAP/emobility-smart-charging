@@ -1,6 +1,7 @@
 # emobility-smart-charging
 
 [![Build Status](https://travis-ci.com/SAP/emobility-smart-charging.svg?branch=master)](https://travis-ci.com/SAP/emobility-smart-charging)
+[![REUSE status](https://api.reuse.software/badge/github.com/SAP/emobility-smart-charging)](https://api.reuse.software/info/github.com/SAP/emobility-smart-charging)
 
 ## Contents:
 1. [Description](#description)
