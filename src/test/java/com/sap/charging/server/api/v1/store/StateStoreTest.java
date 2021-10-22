@@ -25,6 +25,7 @@ import com.sap.charging.realTime.StrategyAlgorithmic;
 import com.sap.charging.realTime.StrategyAlgorithmicChargeScheduler;
 import com.sap.charging.realTime.model.CarAssignment;
 import com.sap.charging.realTime.model.CarAssignmentStore;
+import com.sap.charging.realTime.model.forecasting.departure.CarDepartureForecast;
 import com.sap.charging.realTime.model.forecasting.departure.CarDepartureOracle;
 import com.sap.charging.server.api.v1.OptimizeChargingProfilesRequest;
 import com.sap.charging.server.api.v1.exception.UnknownCarException;
@@ -42,6 +43,8 @@ public class StateStoreTest extends SimulationUnitTest {
 	
 	StrategyAlgorithmic strategy; 
 	
+	ObjectMapper objectMapper;
+	
 	@BeforeEach
 	public void setup() {
 		chargingStations = dataSim.getChargingStations()
@@ -56,6 +59,8 @@ public class StateStoreTest extends SimulationUnitTest {
     	strategy.objectiveFairShare.setWeight(1);
     	strategy.setReoptimizeOnStillAvailableAfterExpectedDepartureTimeslot(true);
     	strategy.setRescheduleCarsWith0A(false);
+    	
+    	objectMapper = new ObjectMapper();
 	}
 	
 	@Test
@@ -66,6 +71,43 @@ public class StateStoreTest extends SimulationUnitTest {
 		assertEquals(chargingStations.size(), state.nChargingStations); 
 		assertEquals(cars.size(), state.cars.size());
 		assertEquals(0, state.getCurrentCarAssignments().size()); 
+	}
+	
+	private State getStateFromJsonFile(String filePath) throws JsonMappingException, JsonProcessingException {
+		String jsonStateStore = FileIO.readFile(filePath); 
+		
+		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
+		StateStore stateStore = request.state; 
+		
+		return stateStore.toState();
+	}
+	
+	@Test
+	public void test_ToState_CarDepartureTime_IsSet() throws JsonMappingException, JsonProcessingException {
+		State state = getStateFromJsonFile("src/test/resources/testCasesJSON/StateStoreTest_CarDepartureTime_IsSet.json");
+		
+		assertEquals(1, state.getCurrentCarAssignments().size());
+		Car car = state.getCar(0);
+		assertEquals(0, car.getTimestampArrival());
+		assertEquals(3600, car.getTimestampDeparture());
+		
+		CarAssignment carAssignment = state.getCarAssignmentFromAll(car);
+		assertEquals(3600, carAssignment.getExpectedDepartureTimeSeconds());
+	}
+	
+	@Test
+	public void test_ToStateCarDepartureTime_IsNotSet() throws JsonMappingException, JsonProcessingException {
+		State state = getStateFromJsonFile("src/test/resources/testCasesJSON/StateStoreTest_CarDepartureTime_IsNotSet.json");
+		
+		assertEquals(1, state.getCurrentCarAssignments().size());
+		Car car = state.getCar(0);
+		assertEquals(0, car.getTimestampArrival());
+		assertEquals(0, car.getTimestampDeparture());
+		
+		CarAssignment carAssignment = state.getCarAssignmentFromAll(car);
+		int defaultDepartureTimeSeconds = CarDepartureForecast.getDefaultCarDepartureForecast().getExpectedDepartureTimeSeconds(null, null);
+		assertEquals(defaultDepartureTimeSeconds, carAssignment.getExpectedDepartureTimeSeconds());
+		assertEquals(17*3600 + 3*60, carAssignment.getExpectedDepartureTimeSeconds());
 	}
 	
 	@Test
@@ -90,14 +132,7 @@ public class StateStoreTest extends SimulationUnitTest {
 	
 	@Test
 	public void test_PassFuseTree_ChargingStationParent_NotNull() throws JsonMappingException, JsonProcessingException {
-		
-		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_FuseTooSmall_4_Cars.json"); 
-		
-		ObjectMapper objectMapper = new ObjectMapper();
-		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
-		StateStore stateStore = request.state; 
-		
-		State state = stateStore.toState(); 
+		State state = getStateFromJsonFile("src/test/resources/testCasesJSON/StateStoreTest_FuseTooSmall_4_Cars.json");
 		
 		assertEquals(2, state.getChargingStationsOccupied().size()); 
 		for (ChargingStation station : state.getChargingStationsOccupied()) {
@@ -107,16 +142,7 @@ public class StateStoreTest extends SimulationUnitTest {
 	
 	@Test
 	public void test_OptimizeState_WithUnassignedCars() throws JsonMappingException, JsonProcessingException {
-		
-		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_FuseTooSmall_4_Cars.json"); 
-		
-		ObjectMapper objectMapper = new ObjectMapper();
-		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
-		StateStore stateStore = request.state; 
-		
-		
-		State state = stateStore.toState(); 
-		
+		State state = getStateFromJsonFile("src/test/resources/testCasesJSON/StateStoreTest_FuseTooSmall_4_Cars.json");
 		
     	Simulation.verbosity = 0; 
 		strategy.reactReoptimize(state);
@@ -133,21 +159,13 @@ public class StateStoreTest extends SimulationUnitTest {
 		Car car2 = state.getCar(1); 
 		int currentTimeslot = state.currentTimeslot; 
 		assertNotEquals(car1.getCurrentPlan()[currentTimeslot], car2.getCurrentPlan()[currentTimeslot]);
-		
 	}
 	
 	
 	@Test
 	public void test_OptimizeState_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse() throws JsonMappingException, JsonProcessingException {
 		// See also StrategyAlgorithmicTest.testRescheduleCar_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse
-		
-		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse.json"); 
-		
-		ObjectMapper objectMapper = new ObjectMapper();
-		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
-		StateStore stateStore = request.state; 
-		
-		State state = stateStore.toState(); 
+		State state = getStateFromJsonFile("src/test/resources/testCasesJSON/StateStoreTest_SinglePhaseCar_StationWithPhaseRotation_SinglePhaseFuse.json");
 		
 		Simulation.verbosity = 0; 
 		strategy.reactReoptimize(state);
@@ -158,16 +176,9 @@ public class StateStoreTest extends SimulationUnitTest {
 		}
 	}
 	
-	
 	@Test
 	public void test_OptimizeState_ThreePhaseCar_SinglePhaseStation() throws JsonMappingException, JsonProcessingException {
-		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_ThreePhaseCar_SinglePhaseStation.json"); 
-		
-		ObjectMapper objectMapper = new ObjectMapper();
-		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
-		StateStore stateStore = request.state; 
-		
-		State state = stateStore.toState(); 
+		State state = getStateFromJsonFile("src/test/resources/testCasesJSON/StateStoreTest_ThreePhaseCar_SinglePhaseStation.json");
 		
     	Simulation.verbosity = 0; 
 		strategy.reactReoptimize(state);
@@ -188,13 +199,7 @@ public class StateStoreTest extends SimulationUnitTest {
 	
 	@Test
 	public void test_OptimizeState_ThreePhaseCar_SinglePhaseStationWithPhaseRotation() throws JsonMappingException, JsonProcessingException {
-		String jsonStateStore = FileIO.readFile("src/test/resources/testCasesJSON/StateStoreTest_ThreePhaseCar_SinglePhaseStationWithPhaseRotation.json"); 
-		
-		ObjectMapper objectMapper = new ObjectMapper();
-		OptimizeChargingProfilesRequest request = objectMapper.readValue(jsonStateStore, OptimizeChargingProfilesRequest.class);  
-		StateStore stateStore = request.state; 
-		
-		State state = stateStore.toState(); 
+		State state = getStateFromJsonFile("src/test/resources/testCasesJSON/StateStoreTest_ThreePhaseCar_SinglePhaseStationWithPhaseRotation.json");
 		
     	Simulation.verbosity = 0; 
 		strategy.reactReoptimize(state);

@@ -1,0 +1,59 @@
+{
+    "event": {
+        "eventType": "Reoptimize"
+    },
+    "state": {
+        "currentTimeSeconds": 1,
+        "cars": [
+            {
+                "id": 0,
+                "canLoadPhase1": 1,
+                "canLoadPhase2": 1,
+                "canLoadPhase3": 1,
+                "carType": "BEV",
+                "maxCapacity": 10,
+                "minLoadingState": 5,
+                "startCapacity": 1,
+                "minCurrent": 18,
+                "minCurrentPerPhase": 6,
+                "maxCurrent": 96,
+                "maxCurrentPerPhase": 32,
+                "timestampArrival": 0
+            }
+        ],
+        "fuseTree": {
+            "rootFuse": {
+                "@type": "Fuse",
+                "id": 0,
+                "fusePhase1": 32,
+                "fusePhase2": 32,
+                "fusePhase3": 32,
+                "children": [
+                    {
+                        "@type": "ChargingStation",
+                        "id": 0,
+                        "fusePhase1": 32,
+                        "fusePhase2": 32,
+                        "fusePhase3": 32,
+                        "phaseToGrid": {
+                            "PHASE_1": "PHASE_1",
+                            "PHASE_2": "PHASE_2",
+                            "PHASE_3": "PHASE_3"
+                        },
+                        "phaseToChargingStation": {
+                            "PHASE_1": "PHASE_1",
+                            "PHASE_2": "PHASE_2",
+                            "PHASE_3": "PHASE_3"
+                        }
+                    }
+                ]
+            }
+        },
+        "carAssignments": [
+            {
+                "carID": 0,
+                "chargingStationID": 0
+            }
+        ]
+    }
+}
