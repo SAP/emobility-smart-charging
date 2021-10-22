@@ -152,7 +152,10 @@ public class StateStore {
 		for (CarAssignmentStore carAssignmentStore : carAssignments) {
 			Car car = state.getCar(carAssignmentStore.carID);
 			ChargingStation chargingStation = state.getChargingStation(carAssignmentStore.chargingStationID);
-			state.addCarAssignment(car, chargingStation);
+			CarAssignment carAssignment = state.addCarAssignment(car, chargingStation);
+			if (car.getTimestampDeparture() > 0) {
+				carAssignment.setExpectedDepartureTimeSeconds(car.getTimestampDeparture());
+			}
 		}
 
 		// Build power assignments from current plans of cars
