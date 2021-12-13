@@ -1,7 +1,9 @@
 package com.sap.charging.sim.eval;
 
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 import com.sap.charging.model.Car;
 import com.sap.charging.model.ChargingStation;
@@ -234,10 +236,23 @@ public class Validation {
 	
 	public static int checkSummedChildConsumption = 0;
 	public static int checkSummedChildConsumptionAtTimeslot = 0;
+	
+	/**
+	 * Initializes a new (empty) fuse consumption map
+	 * @return
+	 */
+	public static Map<FuseTreeNode, double[]> initializeFuseConsumptionMap() {
+		return new TreeMap<FuseTreeNode, double[]>(new Comparator<FuseTreeNode>() {
+			public int compare(FuseTreeNode fuse1, FuseTreeNode fuse2) {
+				return fuse2.getId() - fuse1.getId();
+			} 
+	    });
+	}
+	
 	public static void checkSummedChildConsumptionAtTimeslot(FuseTreeNode rootItem, State state, 
 			int timeslotToCheck) throws FuseTreeException {
 		
-		HashMap<FuseTreeNode, double[]> fuseConsumptionMap = new HashMap<>();
+		Map<FuseTreeNode, double[]> fuseConsumptionMap = initializeFuseConsumptionMap();
 		
 		for (ChargingStation chargingStation : state.fuseTree.getListOfChargingStations()) {
 			
@@ -261,7 +276,7 @@ public class Validation {
 	 * @param consumption
 	 */
 	public static void updateFuseParentsConsumption(FuseTreeNode item, 
-			HashMap<FuseTreeNode,double[]> fuseConsumptionMap, double[] consumption) {
+			Map<FuseTreeNode,double[]> fuseConsumptionMap, double[] consumption) {
 		if (consumption == null)
 			return;
 		
@@ -287,7 +302,7 @@ public class Validation {
 	 * @param timeslotToCheck
 	 * @throws FuseTreeException
 	 */
-	public static void validateFuseUsage(HashMap<FuseTreeNode,double[]> fuseConsumptionMap, int timeslotToCheck) throws FuseTreeException {
+	public static void validateFuseUsage(Map<FuseTreeNode,double[]> fuseConsumptionMap, int timeslotToCheck) throws FuseTreeException {
 		for (FuseTreeNode fuseToCheck : fuseConsumptionMap.keySet()) {
 			double[] consumption = fuseConsumptionMap.get(fuseToCheck);
 			if (consumption != null) {

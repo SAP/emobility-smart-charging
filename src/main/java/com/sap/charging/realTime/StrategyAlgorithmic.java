@@ -558,8 +558,10 @@ public class StrategyAlgorithmic extends Strategy {
 					thisFuseViolationFixed = true;
 				}
 				catch (FuseTreeException updatedException) {
-					log(2, "Updated fuseTreeException: " + updatedException.getMessage());
+					log(2, "New fuseTreeException: " + updatedException.getMessage());
 					if (updatedException.getFuse() != violatedFuse) {
+						log(3, "New fuseTreeException describes a different fuse (index=" + updatedException.getFuse().getId() + ") " +
+							   "compared to the resolved fuseTreeException (index=" + violatedFuse.getId() + ")");
 						thisFuseViolationFixed = true; 
 					}
 					else {
