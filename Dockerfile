@@ -1,7 +1,7 @@
 ############
 ## Server ##
 ############
-FROM maven:alpine as build_server
+FROM maven:3.6.1-jdk-8-alpine as build_server
 RUN apk add --update make
 
 # Copy from ChargingOptimizer
