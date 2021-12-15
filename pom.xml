@@ -21,6 +21,7 @@
 
 	<properties>
 		<java.version>1.8</java.version>
+		<log4j2.version>2.16.0</log4j2.version> <!-- Log4j2 fix: https://nvd.nist.gov/vuln/detail/CVE-2021-44228 -->
 	</properties>
 
 	<build>
