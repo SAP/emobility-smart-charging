@@ -18,7 +18,7 @@ RUN make emobility-smart-charging-build
 ##############
 ## Frontend ##
 ##############
-FROM node:lts-alpine as build_frontend
+FROM node:lts-alpine3.14 as build_frontend
 RUN apk add --update make maven
 
 # Use build results so far
