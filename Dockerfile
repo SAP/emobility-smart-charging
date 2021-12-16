@@ -1,7 +1,7 @@
 ############
 ## Server ##
 ############
-FROM maven:alpine as build_server
+FROM maven:3.6.1-jdk-8-alpine as build_server
 RUN apk add --update make
 
 # Copy from ChargingOptimizer
@@ -18,7 +18,7 @@ RUN make emobility-smart-charging-build
 ##############
 ## Frontend ##
 ##############
-FROM node:lts-alpine as build_frontend
+FROM node:lts-alpine3.13 as build_frontend
 RUN apk add --update make maven
 
 # Use build results so far
