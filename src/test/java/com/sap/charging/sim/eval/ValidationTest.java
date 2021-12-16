@@ -10,6 +10,9 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.SortedSet;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -369,9 +372,15 @@ public class ValidationTest extends SimulationUnitTest {
         // Without assignment
         double[] result2 = Validation.getCurrentPerGridPhase(new ChargingStation(), state, 0);
         assertNull(result2);
-
     }
-
+    
+    @Test
+    public void testFuseConsumptionMap_KeySetIsSorted() {
+    	Map<FuseTreeNode, double[]> newMap = Validation.initializeFuseConsumptionMap();
+    	Set<FuseTreeNode> fusesToCheck = newMap.keySet();
+    	assertTrue(fusesToCheck instanceof SortedSet);
+    }
+    
     @Test
     public void testCheckSummedChildConsumption() throws FuseTreeException {
     	Car car = dataSim.getCar(0); 
