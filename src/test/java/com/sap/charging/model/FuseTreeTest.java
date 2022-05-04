@@ -124,12 +124,11 @@ public class FuseTreeTest {
 		FuseTree fuseTree = new FuseTree(root, 20);
 
 		JSONObject json1 = fuseTree.toJSONObject();
-		String jsonString1 = json1.toString();
 		
 		FuseTree clone = FuseTree.fromJSON(json1, new ArrayList<ChargingStation>());
-		String jsonString2 = clone.toJSONObject().toString();
+		JSONObject json2 = clone.toJSONObject();
 		
-		assertEquals(jsonString1, jsonString2);
+		assertEquals(json1, json2);
 	}
 	
 	
