@@ -15,12 +15,15 @@ export class ChartChargePlans {
         
         jsonContent.cars.forEach((car, index) => {
             if (tMin > car.timestampArrival) tMin = car.timestampArrival; 
-            if (tMax < car.timestampDeparture) tMax = car.timestampDeparture; 
+
+            if (car.timestampDeparture == 0) {
+                // If any car has a timeStamp departure of 0, set tMax = end of day
+                tMax = 24*3600; 
+            }
+            if (tMax < car.timestampDeparture) {
+                tMax = car.timestampDeparture; 
+            }
         }); 
-    
-        if (tMax === 0) {
-            tMax = 24*3600; 
-        }
       
         tMin = Math.max(0, tMin-7*ChartChargePlans.timeslotLength); 
         tMax = Math.min(24*3600, tMax+ChartChargePlans.timeslotLength); 
