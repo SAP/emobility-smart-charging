@@ -526,10 +526,20 @@ public class StrategyAlgorithmic extends Strategy {
 		boolean thisFuseViolationFixed = false; // Has the violation for THIS fuse been fixed?
 		while (thisFuseViolationFixed == false) {
 			
-			log(2, "Handling violation at timeslot k=" + violatingK + " with exception=" + fuseTreeException.getMessage());
+			log(2, "Handling violation at timeslot k=" + violatingK + " with exception=" + fuseTreeException.getMessage() + 
+					" (" + sortedViolatingCars.size() + " violating cars left)");
 			
 			// Make changes to charging plan for car with lowest priority
 			if (sortedViolatingCars.size() == 0) {
+				sortedViolatingCars = getSortedCarsByPriority(carAssignments, state.currentTimeSeconds, violatingK);
+				log(1, "Remaining violating cars with plan>0A at k=" + violatingK + ": " + sortedViolatingCars);
+				for (SortableElement<CarAssignment> violatingCar: sortedViolatingCars) {
+					Car car = violatingCar.index.car;
+					double plannedCurrent = car.getCurrentPlan()[violatingK];
+					if (plannedCurrent > 0) {
+						log(1, "Car n=" + car.getId() + " is still planned with plannedCurrent=" + plannedCurrent + "A");
+					}
+				}
 				throw new RuntimeException("Rescheduled all n=" + state.cars.size() + " cars at k=" + violatingK + " but violation is not fixed!");
 			}
 			
@@ -541,12 +551,12 @@ public class StrategyAlgorithmic extends Strategy {
 			double[] consumption = fuseTreeException.getFuse() instanceof Fuse ? 
 					carAssignmentLowestPriority.getCurrentPerGridPhase(violatingK) :
 					carAssignmentLowestPriority.getCurrentPerStationPhase(violatingK); 
-					
-			double plannedCurrent = consumption[fuseTreeException.getPhaseWithHighestDelta().asInt()-1]; 
+			Phase phaseWithHighestDelta = fuseTreeException.getPhaseWithHighestDelta();
+			double plannedCurrent = consumption[phaseWithHighestDelta.asInt()-1]; 
 			
 			log(2, "Car n=" + carAssignmentLowestPriority.car.getId() + " has lowest priority (" 
 					+ sortedViolatingCars.get(0).value 
-					+ ") in violatingK=" + violatingK + ", plannedCurrent=" + Util.formatDouble(plannedCurrent) + "A");
+					+ ") in violatingK=" + violatingK + ", plannedCurrent=" + Util.formatDouble(plannedCurrent) + "A (on " + phaseWithHighestDelta + ")");
 			
 			if (plannedCurrent > 0) {
 				
