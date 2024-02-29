@@ -532,10 +532,10 @@ public class StrategyAlgorithmic extends Strategy {
 			if (sortedViolatingCars.size() == 0) {
 				throw new RuntimeException("Rescheduled all n=" + state.cars.size() + " cars at k=" + violatingK + " but violation is not fixed!");
 			}
-			int carToBeRemoved = 0;
+			int violatingCar = 0;
 			// Loop through the list of cars until a car is found, which can reduce the power of the fuse with the highest delta
-			for (int violatingCar=0; violatingCar<sortedViolatingCars.size();violatingCar++) {
-				CarAssignment carAssignmentLowestPriority = sortedViolatingCars.get(violatingCar).index;
+			for (int currentCar=0; currentCar<sortedViolatingCars.size();currentCar++) {
+				CarAssignment carAssignmentLowestPriority = sortedViolatingCars.get(currentCar).index;
 				// Check consumption on correct phase --> Check whether EV with lowest priority causes exception
 				// Differentiate between charging station exceptions and fuse exceptions:
 				// On fuses use currentPerGridPhase
@@ -571,11 +571,11 @@ public class StrategyAlgorithmic extends Strategy {
 						}
 					}
 					// Relevant Car was rescheduled. Break the loop and check if the violation was fixed
-					carToBeRemoved = violatingCar;
+					violatingCar = currentCar;
 					break;
 				}
 			}
-			sortedViolatingCars.remove(carToBeRemoved); // Remove the car with the lowest priority	
+			sortedViolatingCars.remove(violatingCar); // Remove the car with the lowest priority	
 		}
 		// Remove violation from map
 		violatingTimeslots.remove(violatingK);
