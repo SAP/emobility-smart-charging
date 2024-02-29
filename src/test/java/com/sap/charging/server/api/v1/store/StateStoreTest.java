@@ -175,6 +175,21 @@ public class StateStoreTest extends SimulationUnitTest {
 			assertEquals(0, car.getCurrentPlan()[k], 1e-8); 
 		}
 	}
+
+	@Test
+	public void test_OptimizeState_Two_SinglePhaseCars_Two_ThreePhasedStations_DifferentPhasesConsuming() throws JsonMappingException, JsonProcessingException {
+		State state = getStateFromJsonFile("src/test/resources/testCasesJSON/StateStoreTest_Two_SinglePhaseCars_Two_ThreePhasedStations_DifferentPhasesConsuming.json");
+		
+		Simulation.verbosity = 0; 
+		strategy.reactReoptimize(state);
+		Car car = state.getCar(1); 
+		Car car1 = state.getCar(2); 
+		
+		for (int k=0; k<96; k++) {
+			assertEquals(8, car.getCurrentPlan()[k], 1e-8); 
+			assertEquals(8, car1.getCurrentPlan()[k], 1e-8); 
+		}
+	}
 	
 	@Test
 	public void test_OptimizeState_ThreePhaseCar_SinglePhaseStation() throws JsonMappingException, JsonProcessingException {

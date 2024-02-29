@@ -1,0 +1,92 @@
+{
+    "event": {
+        "eventType": "Reoptimize"
+    },
+    "state": {
+        "fuseTree": {
+            "rootFuse": {
+                "@type": "Fuse",
+                "id": 0,
+                "fusePhase1": 8,
+                "fusePhase2": 8,
+                "fusePhase3": 8,
+                "phase1Connected": true,
+                "phase2Connected": true,
+                "phase3Connected": true,
+                "children": [
+                    {
+                        "@type": "ChargingStation",
+                        "id": 1,
+                        "fusePhase1": 32,
+                        "fusePhase2": 32,
+                        "fusePhase3": 32,
+                        "phase1Connected": true,
+                        "phase2Connected": true,
+                        "phase3Connected": true
+                    },
+                    {
+                        "@type": "ChargingStation",
+                        "id": 2,
+                        "fusePhase1": 32,
+                        "fusePhase2": 32,
+                        "fusePhase3": 32,
+                        "phase1Connected": true,
+                        "phase2Connected": true,
+                        "phase3Connected": true
+                    }
+                ]
+            }
+        },
+        "cars": [
+            {
+                "canLoadPhase1": 1,
+                "canLoadPhase2": 0,
+                "canLoadPhase3": 0,
+                "id": 1,
+                "timestampArrival": 0,
+                "carType": "BEV",
+                "maxCapacity": 1000,
+                "minLoadingState": 0,
+                "startCapacity": 100,
+                "minCurrent": 6,
+                "minCurrentPerPhase": 6,
+                "maxCurrent": 16,
+                "maxCurrentPerPhase": 16,
+                "suspendable": true,
+                "immediateStart": false,
+                "canUseVariablePower": true,
+                "name": "####"
+            },
+            {
+                "canLoadPhase1": 0,
+                "canLoadPhase2": 0,
+                "canLoadPhase3": 1,
+                "id": 2,
+                "timestampArrival": 0,
+                "carType": "BEV",
+                "maxCapacity": 1000,
+                "minLoadingState": 0,
+                "startCapacity": 800,
+                "minCurrent": 6,
+                "minCurrentPerPhase": 6,
+                "maxCurrent": 10,
+                "maxCurrentPerPhase": 10,
+                "suspendable": true,
+                "immediateStart": false,
+                "canUseVariablePower": true,
+                "name": "####"
+            }
+        ],
+        "carAssignments": [
+            {
+                "carID": 1,
+                "chargingStationID": 1
+            },
+            {
+                "carID": 2,
+                "chargingStationID": 2
+            }
+        ],
+        "currentTimeSeconds": 0
+    }
+}
