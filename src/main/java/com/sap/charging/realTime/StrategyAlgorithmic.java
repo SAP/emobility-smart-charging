@@ -532,45 +532,50 @@ public class StrategyAlgorithmic extends Strategy {
 			if (sortedViolatingCars.size() == 0) {
 				throw new RuntimeException("Rescheduled all n=" + state.cars.size() + " cars at k=" + violatingK + " but violation is not fixed!");
 			}
-			
-			CarAssignment carAssignmentLowestPriority = sortedViolatingCars.get(0).index;
-			// Check consumption on correct phase --> Check whether EV with lowest priority causes exception
-			// Differentiate between charging station exceptions and fuse exceptions:
-			// On fuses use currentPerGridPhase
-			// On chargingStation use currentPerStationPhase (so that it matches the correct fuseSize)
-			double[] consumption = fuseTreeException.getFuse() instanceof Fuse ? 
-					carAssignmentLowestPriority.getCurrentPerGridPhase(violatingK) :
-					carAssignmentLowestPriority.getCurrentPerStationPhase(violatingK); 
+			int indexViolatingCar = 0;
+			// Loop through the list of cars until a car is found, which can reduce the power of the fuse with the highest delta
+			for (int indexCurrentCar=0; indexCurrentCar<sortedViolatingCars.size();indexCurrentCar++) {
+				CarAssignment carAssignmentLowestPriority = sortedViolatingCars.get(indexCurrentCar).index;
+				// Check consumption on correct phase --> Check whether EV with lowest priority causes exception
+				// Differentiate between charging station exceptions and fuse exceptions:
+				// On fuses use currentPerGridPhase
+				// On chargingStation use currentPerStationPhase (so that it matches the correct fuseSize)
+				double[] consumption = fuseTreeException.getFuse() instanceof Fuse ? 
+						carAssignmentLowestPriority.getCurrentPerGridPhase(violatingK) :
+						carAssignmentLowestPriority.getCurrentPerStationPhase(violatingK); 
+						
+				double plannedCurrent = consumption[fuseTreeException.getPhaseWithHighestDelta().asInt()-1];
+				
+				log(2, "Car n=" + carAssignmentLowestPriority.car.getId() + " has lowest priority (" 
+						+ sortedViolatingCars.get(0).value 
+						+ ") in violatingK=" + violatingK + ", plannedCurrent=" + Util.formatDouble(plannedCurrent) + "A");
+				
+				if (plannedCurrent > 0) {
 					
-			double plannedCurrent = consumption[fuseTreeException.getPhaseWithHighestDelta().asInt()-1]; 
-			
-			log(2, "Car n=" + carAssignmentLowestPriority.car.getId() + " has lowest priority (" 
-					+ sortedViolatingCars.get(0).value 
-					+ ") in violatingK=" + violatingK + ", plannedCurrent=" + Util.formatDouble(plannedCurrent) + "A");
-			
-			if (plannedCurrent > 0) {
-				
-				rescheduleCar(state, carAssignmentLowestPriority, blockedTimeslots, violatingK, fuseTreeException);
-				
-				// Check if this violation was fixed: FuseTreeException e must be updated
-				try {
-					Validation.validateFuseAtTimeslot(violatedFuse, state, violatingK);
-					thisFuseViolationFixed = true;
-				}
-				catch (FuseTreeException updatedException) {
-					log(2, "New fuseTreeException: " + updatedException.getMessage());
-					if (updatedException.getFuse() != violatedFuse) {
-						log(3, "New fuseTreeException describes a different fuse (index=" + updatedException.getFuse().getId() + ") " +
-							   "compared to the resolved fuseTreeException (index=" + violatedFuse.getId() + ")");
-						thisFuseViolationFixed = true; 
+					rescheduleCar(state, carAssignmentLowestPriority, blockedTimeslots, violatingK, fuseTreeException);
+					
+					// Check if this violation was fixed: FuseTreeException e must be updated
+					try {
+						Validation.validateFuseAtTimeslot(violatedFuse, state, violatingK);
+						thisFuseViolationFixed = true;
 					}
-					else {
-						fuseTreeException = updatedException;
+					catch (FuseTreeException updatedException) {
+						log(2, "New fuseTreeException: " + updatedException.getMessage());
+						if (updatedException.getFuse() != violatedFuse) {
+							log(3, "New fuseTreeException describes a different fuse (index=" + updatedException.getFuse().getId() + ") " +
+								"compared to the resolved fuseTreeException (index=" + violatedFuse.getId() + ")");
+							thisFuseViolationFixed = true; 
+						}
+						else {
+							fuseTreeException = updatedException;
+						}
 					}
+					// Relevant Car was rescheduled. Break the loop and check if the violation was fixed
+					indexViolatingCar = indexCurrentCar;
+					break;
 				}
-				
 			}
-			sortedViolatingCars.remove(0); // Remove the car with the lowest priority
+			sortedViolatingCars.remove(indexViolatingCar); // Remove the car which was rescheduled	
 		}
 		// Remove violation from map
 		violatingTimeslots.remove(violatingK);
