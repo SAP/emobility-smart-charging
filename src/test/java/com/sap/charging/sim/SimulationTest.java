@@ -5,10 +5,7 @@ import static com.sap.charging.util.JSONKeys.JSON_KEY_SOLUTION;
 import static com.sap.charging.util.JSONKeys.JSON_KEY_VARIABLES;
 import static com.sap.charging.util.JSONKeys.JSON_KEY_VARIABLE_NAME;
 import static com.sap.charging.util.JSONKeys.JSON_KEY_VARIABLE_VALUE;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +14,7 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -137,7 +134,7 @@ public class SimulationTest extends SimulationUnitTest {
 		this.sim.init();
 		
 		// Check total length of events
-		Assert.assertEquals(
+		Assertions.assertEquals(
 				dataSim.getCars().size()*2 + // arrival + departure per car
 				dataSim.getEnergyPriceHistory().getNTimeslots(),  // one per timeslot
 				sim.getSimulationEvents().size()
@@ -147,7 +144,7 @@ public class SimulationTest extends SimulationUnitTest {
 		for (int i=0;i<sim.getSimulationEvents().size()-1;i++) {
 			Event e1 = sim.getSimulationEvents().get(i);
 			Event e2 = sim.getSimulationEvents().get(i+1);
-			Assert.assertTrue(e1.timestamp.isBefore(e2.timestamp));
+			Assertions.assertTrue(e1.timestamp.isBefore(e2.timestamp));
 		}
 		
 	}

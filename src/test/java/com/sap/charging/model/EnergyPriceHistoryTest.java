@@ -1,6 +1,6 @@
 package com.sap.charging.model;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

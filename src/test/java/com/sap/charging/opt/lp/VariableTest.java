@@ -1,8 +1,6 @@
 package com.sap.charging.opt.lp;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

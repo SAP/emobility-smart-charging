@@ -1,6 +1,6 @@
-package com.sap.charging.realTime.model; 
+package com.sap.charging.realTime.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 
@@ -12,7 +12,6 @@ import com.sap.charging.model.EnergyUtil.Phase;
 import com.sap.charging.model.Fuse;
 import com.sap.charging.sim.common.SimulationUnitTest;
 import com.sap.charging.util.TimeUtil;
-
 
 
 public class CarAssignmentTest extends SimulationUnitTest {

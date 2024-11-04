@@ -1,7 +1,7 @@
 package com.sap.charging.model;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -100,7 +100,7 @@ public class FuseTreeTest {
 	      parentCounter.incrementAndGet();
 	    }
 	    if(node.hasChildren()){
-	      node.getChildren().forEach(child -> Assert.assertEquals(node, child.getParent()));
+	      node.getChildren().forEach(child -> Assertions.assertEquals(node, child.getParent()));
 	    }
 	  });
 	  
