@@ -1,6 +1,6 @@
 package com.sap.charging.realTime;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.json.simple.JSONObject;
 import org.junit.jupiter.api.Test;

@@ -1,13 +1,12 @@
 package com.sap.charging.dataGeneration;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 
 import org.junit.jupiter.api.Test;
 
 import com.sap.charging.model.Car;
-
 
 
 public class DataGeneratorDeterministicTest {

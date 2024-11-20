@@ -3,10 +3,7 @@ package com.sap.charging.opt.lp;
 import static com.sap.charging.util.JSONKeys.JSON_KEY_CARS;
 import static com.sap.charging.util.JSONKeys.JSON_KEY_PROBLEM_INSTANCE;
 import static com.sap.charging.util.JSONKeys.JSON_KEY_SOLUTION;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import static org.junit.jupiter.api.Assertions.*;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
